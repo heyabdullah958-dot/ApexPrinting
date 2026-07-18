@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Apex Print Hub - Complete Catalog of Premium Printing Services.">
+    <title>Our Services | Apex Print Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <img src="logo.jpeg" alt="Apex Printing Solutions" class="nav-logo-img">
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="services.html" class="nav-link active">Products</a></li>
+                <li><a href="index.html#process" class="nav-link">Process</a></li>
+                <li><a href="index.html#why-us" class="nav-link">Why Apex</a></li>
+                <li><a href="contact.html" class="nav-link">Contact</a></li>
+                <li class="currency-selector-li">
+                    <select id="currencySelector" class="currency-select" aria-label="Select Currency">
+                        <option value="USD">USD ($)</option>
+                        <option value="AED">AED (د.إ)</option>
+                        <option value="SAR">SAR (ر.س)</option>
+                        <option value="PKR">PKR (Rs.)</option>
+                    </select>
+                </li>
+                <li><a href="contact.html" class="btn btn-primary" style="margin-left: 1rem; padding: 0.75rem 1.5rem;">Get a Quote</a></li>
+                <li><button class="btn btn-outline" style="margin-left: 0.5rem; padding: 0.75rem 1.5rem;" onclick="window.openCartModal()">Cart <span id="cartCount">(0)</span></button></li>
+                <li><button class="btn btn-outline" style="margin-left: 0.5rem; padding: 0.75rem 1.5rem;" onclick="openSignUpModal()">Sign Up</button></li>
+            </ul>
+            <button class="hamburger" id="hamburger" aria-label="Toggle Navigation">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="hero" style="min-height: 50vh;">
+        <div class="hero-bg" style="opacity: 0.25;"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-grid"></div>
+        
+        <div class="container" style="min-height: auto; padding-top: calc(var(--nav-h) + 4rem); padding-bottom: 4rem; display: block; text-align: center;">
+            <div class="hero-eyebrow" style="justify-content: center; animation-delay: 0.1s;">
+                <div class="eyebrow-line"></div>
+                <span>Our Catalog</span>
+                <div class="eyebrow-line"></div>
+            </div>
+            <h1 style="font-size: clamp(3rem, 6vw, 5rem); animation-delay: 0.2s;">Premium <span class="gold italic">Services</span></h1>
+            <p class="hero-desc" style="margin: 0 auto; animation-delay: 0.3s; max-width: 600px;">Explore our comprehensive range of high-end printing solutions designed to elevate your brand identity and operational excellence.</p>
+        </div>
+    </header>
+
+    
+    <!-- 3D Design References Gallery -->
+    <div style="background: var(--black-soft); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 5rem 0;">
+        <div class="container">
+            <div class="section-header reveal" style="text-align: center; margin-bottom: 3.5rem;">
+                <span class="section-eyebrow">Design Showcase</span>
+                <h2 class="section-title">Premium 3D <span class="serif">Mockups</span></h2>
+                <div class="gold-line"></div>
+                <p class="section-subtitle">Exquisite design concepts created by our design team for client reference. These mockups showcase our premium printing capabilities.</p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+                <!-- Card 1 -->
+                <div class="reveal" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column;">
+                    <div style="height: 200px; overflow: hidden; position: relative;">
+                        <img src="3d_business_card.avif" alt="3D Business Card Mockup" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    </div>
+                    <div style="padding: 1.25rem;">
+                        <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 1px;">Business Card Design</h4>
+                        <p style="color: var(--gray); font-size: 0.85rem; margin-bottom: 0; line-height: 1.5;">Premium 3D visual concept featuring matte gold foiling and thick edge-gilding.</p>
+                    </div>
+                </div>
+                <!-- Card 2 -->
+                <div class="reveal" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column;">
+                    <div style="height: 200px; overflow: hidden; position: relative;">
+                        <img src="3d_brochure.jpg" alt="3D Brochure Mockup" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    </div>
+                    <div style="padding: 1.25rem;">
+                        <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 1px;">Brochure Design</h4>
+                        <p style="color: var(--gray); font-size: 0.85rem; margin-bottom: 0; line-height: 1.5;">Elegant tri-fold brochure layout showing folding accuracy and satin-finish paper stock.</p>
+                    </div>
+                </div>
+                <!-- Card 3 -->
+                <div class="reveal" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column;">
+                    <div style="height: 200px; overflow: hidden; position: relative;">
+                        <img src="3d_poster.jpg" alt="3D Poster Mockup" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    </div>
+                    <div style="padding: 1.25rem;">
+                        <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 1px;">Poster & Wall Art</h4>
+                        <p style="color: var(--gray); font-size: 0.85rem; margin-bottom: 0; line-height: 1.5;">High-contrast poster visual showing rich black printing and custom typography layout.</p>
+                    </div>
+                </div>
+                <!-- Card 4 -->
+                <div class="reveal" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column;">
+                    <div style="height: 200px; overflow: hidden; position: relative;">
+                        <img src="3d_booklet.jpg" alt="3D Booklet Mockup" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    </div>
+                    <div style="padding: 1.25rem;">
+                        <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 1px;">Booklet Design</h4>
+                        <p style="color: var(--gray); font-size: 0.85rem; margin-bottom: 0; line-height: 1.5;">Multi-page square booklet concept showing binding structure and premium logo highlights.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Services Detailed -->
+    <div style="background: var(--black); padding: 5rem 0;">
+        <div class="container">
+            
+            <!-- Category 1 -->
+            <div id="brand-identity" class="reveal" style="margin-bottom: 6rem; padding-top: 4rem;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+                    <span style="font-family: var(--font-display); font-size: 3rem; color: var(--gold); line-height: 1;">01</span>
+                    <h2 class="section-title" style="margin-bottom: 0; font-size: 2.5rem;">Brand Identity Suite</h2>
+                </div>
+                <div class="gold-line left" style="margin-bottom: 2rem;"></div>
+                <p style="color: var(--gray); font-size: 1.1rem; max-width: 700px; margin-bottom: 3rem; line-height: 1.8;">Essential corporate stationery crafted with precision. From luxuriously thick business cards to watermarked letterheads, we ensure your daily correspondence reflects your brand's prestige.</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+                    <!-- Business Card -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/Business%20card.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Business Card</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                    <!-- Letterhead -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/Letterhead.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Letterhead</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                    <!-- Envelopes -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/Envelopes.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Envelopes</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                    <!-- Presentation Folders -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/Presentation%20folders.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Presentation Folders</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 2 -->
+            <div id="marketing" class="reveal" style="margin-bottom: 6rem; padding-top: 4rem;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+                    <span style="font-family: var(--font-display); font-size: 3rem; color: var(--gold); line-height: 1;">02</span>
+                    <h2 class="section-title" style="margin-bottom: 0; font-size: 2.5rem;">Marketing Media</h2>
+                </div>
+                <div class="gold-line left" style="margin-bottom: 2rem;"></div>
+                <p style="color: var(--gray); font-size: 1.1rem; max-width: 700px; margin-bottom: 3rem; line-height: 1.8;">High-impact promotional materials designed to capture attention and drive conversions. Vibrant colors, crisp imagery, and flawless finishing.</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+                    <!-- Booklet -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/Booklet.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Booklet</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                    <!-- Brochure -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/Brochure.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Brochure</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                    <!-- Flyer -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/Flyer.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Flyers</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                    <!-- Posters -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/Posters.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Posters</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                    <!-- Calendars -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/CALENDERS.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Calendars</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 3 -->
+            <div id="operations" class="reveal" style="margin-bottom: 6rem; padding-top: 4rem;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+                    <span style="font-family: var(--font-display); font-size: 3rem; color: var(--gold); line-height: 1;">03</span>
+                    <h2 class="section-title" style="margin-bottom: 0; font-size: 2.5rem;">Operations & Logistics</h2>
+                </div>
+                <div class="gold-line left" style="margin-bottom: 2rem;"></div>
+                <p style="color: var(--gray); font-size: 1.1rem; max-width: 700px; margin-bottom: 3rem; line-height: 1.8;">Keep your business running smoothly with custom internal documents. Efficient, professional, and perfectly aligned with your corporate identity.</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+                    <!-- NCR Forms -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/Ncr%20forms.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">NCR Forms</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                    <!-- Note Pads -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/Note%20pads.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Note Pads</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                    <!-- Promotional Pads -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/Promotional%20pads.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Promotional Pads</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 4 -->
+            <div id="packaging" class="reveal" style="margin-bottom: 6rem; padding-top: 4rem;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+                    <span style="font-family: var(--font-display); font-size: 3rem; color: var(--gold); line-height: 1;">04</span>
+                    <h2 class="section-title" style="margin-bottom: 0; font-size: 2.5rem;">Premium Packaging</h2>
+                </div>
+                <div class="gold-line left" style="margin-bottom: 2rem;"></div>
+                <p style="color: var(--gray); font-size: 1.1rem; max-width: 700px; margin-bottom: 3rem; line-height: 1.8;">The final touch for physical products. Enhance the unboxing experience with bespoke packaging that speaks volumes about your brand's quality.</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+                    <!-- Paper Bags -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/Paper%20bags.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Paper Bags</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                    <!-- Gift Boxes -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/GIFT%20BOXES.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Gift Boxes</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                    <!-- Shipping Boxes -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/SHIPPING%20BOXES.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Shipping Boxes</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 5 (New Category) -->
+            <div id="apparel-gifts" class="reveal" style="padding-top: 4rem;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+                    <span style="font-family: var(--font-display); font-size: 3rem; color: var(--gold); line-height: 1;">05</span>
+                    <h2 class="section-title" style="margin-bottom: 0; font-size: 2.5rem;">Apparel & Promotional Gifts</h2>
+                </div>
+                <div class="gold-line left" style="margin-bottom: 2rem;"></div>
+                <p style="color: var(--gray); font-size: 1.1rem; max-width: 700px; margin-bottom: 3rem; line-height: 1.8;">High-quality embroidered apparel and premium corporate gifts. Excellent for exhibitions, client relations, and building strong team identity.</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+                    <!-- Caps -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/CAPS.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Caps</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                    <!-- T-Shirts -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/TSHIRTS.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">T-Shirts</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                    <!-- Mugs -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/MUGS.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Mugs</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                    <!-- Magic Mugs -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/MAGIC%20MUGS.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Magic Mugs</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                    <!-- Pens -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/PENS.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Pens</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                    <!-- Water Bottles -->
+                    <div class="reveal product-card" style="background: var(--black-card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease; height: 320px;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div class="pdf-container" style="height: 220px; width: 100%; overflow: hidden; background: #fff; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <canvas class="pdf-preview" data-pdf="New%20folder/WATER%20BOTTLES.pdf" style="max-width: 100%; max-height: 100%; object-fit: contain; z-index: 5; position: relative;"></canvas>
+                            <div class="loading-spinner" style="position: absolute; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;"></div>
+                        </div>
+                        <div style="padding: 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex: 1;">
+                            <h4 style="font-family: var(--font-serif); font-size: 1rem; color: var(--gold); margin-bottom: 0; text-transform: uppercase; letter-spacing: 1px;">Water Bottles</h4>
+                            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">View</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- CTA Section -->
+    <section class="cta-section" style="background: var(--black-mid); border-top: 1px solid rgba(201,168,76,0.1); padding: 6rem 0;">
+        <div class="container" style="text-align: center;">
+            <div class="reveal">
+                <span class="section-eyebrow">Ready to Begin?</span>
+                <h2 class="section-title">Get a Custom <span class="serif">Quote</span></h2>
+                <div class="gold-line"></div>
+                <p style="color: var(--gray); font-size: 1.1rem; max-width: 600px; margin: 0 auto 2.5rem;">Have a specific project in mind? Our print specialists are ready to help you choose the right materials and finishes.</p>
+                <div class="hero-btns" style="justify-content: center;">
+                    <a href="contact.html" class="btn btn-primary">Contact Us Today</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <!-- Brand -->
+                <div>
+                    <div class="logo" style="margin-bottom: 1.5rem;">
+                        <div class="logo-mark">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        </div>
+                        <div class="logo-text-wrap">
+                            <span class="logo-name">APEX</span>
+                            <span class="logo-tagline">Print Hub</span>
+                        </div>
+                    </div>
+                    <p style="color: var(--gray); font-size: 0.95rem; max-width: 300px; margin-bottom: 2rem;">Premium commercial printing services for brands that demand excellence and uncompromising quality.</p>
+                    <div style="display: flex; gap: 1rem;">
+                        <a href="#" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: var(--white);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
+                        <a href="#" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: var(--white);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
+                        <a href="#" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: var(--white);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg></a>
+                    </div>
+                </div>
+                
+                <!-- Links -->
+                <div>
+                    <h4 style="font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem; color: var(--gold);">Quick Links</h4>
+                    <ul style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <li><a href="index.html" style="color: var(--gray); font-size: 0.95rem;">Home</a></li>
+                        <li><a href="services.html" style="color: var(--gray); font-size: 0.95rem;">Our Services</a></li>
+                        <li><a href="contact.html" style="color: var(--gray); font-size: 0.95rem;">Contact Us</a></li>
+                        <li><a href="contact.html" style="color: var(--gray); font-size: 0.95rem;">Request Quote</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <h4 style="font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem; color: var(--gold);">Contact</h4>
+                    <ul style="display: flex; flex-direction: column; gap: 1rem;">
+                        <li style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                            <svg style="color: var(--gold); flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            <span style="color: var(--gray); font-size: 0.95rem; line-height: 1.5;">123 Printing Ave, Design District<br>New York, NY 10001</span>
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 0.75rem;">
+                            <svg style="color: var(--gold); flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                            <a href="tel:+1234567890" style="color: var(--gray); font-size: 0.95rem;">+1 (234) 567-890</a>
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 0.75rem;">
+                            <svg style="color: var(--gold); flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                            <a href="mailto:quotes@apexprinthub.com" style="color: var(--gray); font-size: 0.95rem;">quotes@apexprinthub.com</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 2rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--gray);">
+                <p>&copy; <span id="year">2026</span> Apex Print Hub. All rights reserved.</p>
+                <div style="display: flex; gap: 1.5rem;">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
+    <script src="script.js"></script>
+    <!-- Sign Up Modal -->
+    <div id="signupModal" class="modal-backdrop">
+        <div class="modal-content auth-modal">
+            <button class="modal-close" onclick="closeSignUpModal()">&times;</button>
+            <h2 class="modal-title">Create an Account</h2>
+            <p class="modal-desc">Join Prestige Press for exclusive perks and faster checkout.</p>
+            <form class="auth-form" onsubmit="event.preventDefault(); alert('Account created!'); closeSignUpModal();">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" required placeholder="john@company.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Sign Up</button>
+            </form>
+            <p class="auth-switch">Already have an account? <a href="#" onclick="alert('Sign In clicked')">Sign In</a></p>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div id="productModal" class="modal-backdrop">
+        <div class="modal-content product-modal">
+            <button class="modal-close" onclick="closeProductModal()">&times;</button>
+            <div class="product-modal-grid">
+                <!-- Left: Image Gallery -->
+                <div class="product-gallery">
+                    <div class="main-image-container">
+                        <canvas id="modalMainCanvas" class="pdf-preview" style="width: 100%; height: 100%; object-fit: contain;"></canvas>
+                        <div class="image-placeholder" id="modalMainPlaceholder" style="display: none;">
+                            <span>Image rendering...</span>
+                        </div>
+                    </div>
+                    <div class="thumbnail-row">
+                        <div class="thumbnail active" onclick="activateThumbnail(this)"></div>
+                        <div class="thumbnail" onclick="activateThumbnail(this)"></div>
+                        <div class="thumbnail" onclick="activateThumbnail(this)"></div>
+                    </div>
+                </div>
+                <!-- Right: Details & Options -->
+                <div class="product-details">
+                    <h2 id="modalTitle" class="modal-product-title">Product Name</h2>
+                    <div class="product-reviews">
+                        <span class="stars">★★★★★</span> <span style="color: var(--gray); font-size: 0.9rem;">(4.8 · 1,240 reviews)</span>
+                    </div>
+                    <p id="modalDesc" class="modal-product-desc">Branded material that communicates professionalism in every piece.</p>
+                    
+                    <div class="product-pricing">
+                        <span id="modalPrice" class="price-amount">$9.99</span>
+                        <br>
+                        <span class="price-label">Starting price · options adjust the total</span>
+                    </div>
+
+                    <form class="product-options-form" id="productOptionsForm" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                        <div id="modalOptionsContainer" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                            <!-- Options will be dynamically populated here -->
+                        </div>
+                        
+                        <button type="submit" id="modalSubmitBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 1rem; font-size: 1.1rem; justify-content: center;">Add to Cart &rarr;</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== PREMIUM SPLASH SCREEN ===== -->
+    <div id="splash-screen">
+        <div class="splash-bg"></div>
+        <div class="splash-rings">
+            <div class="splash-ring ring-1"></div>
+            <div class="splash-ring ring-2"></div>
+            <div class="splash-ring ring-3"></div>
+        </div>
+        <div class="splash-content">
+            <img src="logo.jpeg" alt="Apex Printing Solutions" class="splash-logo">
+            <div class="splash-text">
+                <h1 class="splash-title">APEX</h1>
+                <p class="splash-subtitle">PRINTING SOLUTIONS</p>
+            </div>
+            <div class="splash-loader"><div class="loader-bar"></div></div>
+            <p class="splash-tagline">Where Every Print Tells a Story</p>
+        </div>
+    </div>
+    <style>
+    #splash-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0a0f;z-index:99999;display:flex;align-items:center;justify-content:center;transition:opacity .8s ease,visibility .8s ease}
+    #splash-screen.fade-out{opacity:0;visibility:hidden}
+    .splash-bg{position:absolute;inset:0;background:radial-gradient(ellipse at center,#1a1200 0%,#0a0a0f 70%)}
+    .splash-rings{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+    .splash-ring{position:absolute;border-radius:50%;border:1px solid rgba(212,175,55,.15);top:50%;left:50%;transform:translate(-50%,-50%);animation:ringPulse 3s ease-in-out infinite}
+    .ring-1{width:400px;height:400px}.ring-2{width:600px;height:600px;animation-delay:.5s;border-color:rgba(212,175,55,.08)}.ring-3{width:800px;height:800px;animation-delay:1s;border-color:rgba(212,175,55,.04)}
+    @keyframes ringPulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.6}50%{transform:translate(-50%,-50%) scale(1.05);opacity:1}}
+    .splash-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:1.2rem}
+    .splash-logo{width:140px;height:140px;border-radius:50%;object-fit:cover;animation:logoEntrance 1s cubic-bezier(.34,1.56,.64,1) forwards;opacity:0;box-shadow:0 0 60px rgba(212,175,55,.4),0 0 120px rgba(212,175,55,.15)}
+    @keyframes logoEntrance{from{opacity:0;transform:scale(.3) rotate(-10deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+    .splash-text{text-align:center;animation:textSlideUp .8s ease .6s forwards;opacity:0;transform:translateY(20px)}
+    @keyframes textSlideUp{to{opacity:1;transform:translateY(0)}}
+    .splash-title{font-family:'Playfair Display','Georgia',serif;font-size:clamp(2.5rem,8vw,5rem);font-weight:900;background:linear-gradient(135deg,#b8860b 0%,#ffd700 40%,#d4af37 60%,#b8860b 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.3em;margin:0;line-height:1}
+    .splash-subtitle{font-size:clamp(.6rem,2vw,.85rem);letter-spacing:.5em;color:rgba(212,175,55,.7);margin:.3rem 0 0;font-weight:400;text-transform:uppercase}
+    .splash-loader{width:200px;height:2px;background:rgba(212,175,55,.15);border-radius:2px;overflow:hidden;animation:textSlideUp .8s ease 1s forwards;opacity:0}
+    .loader-bar{height:100%;width:0;background:linear-gradient(90deg,#b8860b,#ffd700,#d4af37);border-radius:2px;animation:loadProgress 1.8s ease 1.2s forwards;box-shadow:0 0 10px rgba(212,175,55,.6)}
+    @keyframes loadProgress{to{width:100%}}
+    .splash-tagline{font-size:.75rem;color:rgba(255,255,255,.3);letter-spacing:.15em;animation:textSlideUp .8s ease 1.4s forwards;opacity:0;font-style:italic}
+    .nav-logo-img{height:44px;width:44px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(212,175,55,.5);box-shadow:0 0 12px rgba(212,175,55,.25);transition:box-shadow .3s ease,transform .3s ease}
+    .nav-logo-img:hover{box-shadow:0 0 20px rgba(212,175,55,.5);transform:scale(1.05)}
+    </style>
+    <script>
+    (function(){
+        var s=document.getElementById('splash-screen');
+        if(!s)return;
+        if(sessionStorage.getItem('splashShown')){
+            s.style.display='none';
+            return;
+        }
+        sessionStorage.setItem('splashShown','true');
+        setTimeout(function(){s.classList.add('fade-out');setTimeout(function(){s.style.display='none'},900)},3000);
+    })();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex Printing Solutions - Admin</title>
+    <style>
+        :root {
+            --gold: #C9A84C;
+            --bg: #0a0a0a;
+            --surface: #1a1a1a;
+            --text: #F5F5F0;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #333; margin-bottom: 20px; }
+        h1 { color: var(--gold); margin: 0; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab { background: var(--surface); color: var(--text); border: 1px solid #333; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
+        .tab.active { background: var(--gold); color: #000; border-color: var(--gold); }
+        .grid { display: grid; gap: 15px; }
+        .card { background: var(--surface); border: 1px solid #333; padding: 15px; border-radius: 6px; }
+        .card h3 { margin: 0 0 10px 0; color: var(--gold); }
+        .meta { font-size: 0.9em; color: #888; margin-bottom: 10px; display: flex; gap: 15px; flex-wrap: wrap; }
+        .badge { background: #333; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; }
+        pre { background: #111; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 0.9em; margin: 0; border-left: 3px solid var(--gold); white-space: pre-wrap; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Apex Printing Solutions — Admin</h1>
+        <div><button onclick="location.reload()" class="tab">Refresh Data</button></div>
+    </header>
+
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('leads')">Contact Leads</button>
+        <button class="tab" onclick="switchTab('quotes')">Quote Requests</button>
+    </div>
+
+    <div id="leads-container" class="grid">Loading leads...</div>
+    <div id="quotes-container" class="grid hidden">Loading quotes...</div>
+
+    <script>
+        async function fetchData(type) {
+            try {
+                const res = await fetch(`/admin/api/${type}`);
+                const json = await res.json();
+                return json.data || [];
+            } catch (e) {
+                console.error(e);
+                return [];
+            }
+        }
+
+        function formatDate(dt) {
+            return new Date(dt).toLocaleString();
+        }
+
+        function renderLeads(leads) {
+            const container = document.getElementById('leads-container');
+            if (!leads.length) return container.innerHTML = '<p>No leads found.</p>';
+            container.innerHTML = leads.map(l => `
+                <div class="card">
+                    <h3>${l.name} - ${l.service}</h3>
+                    <div class="meta">
+                        <span>📧 ${l.email}</span>
+                        <span>📞 ${l.phone || 'N/A'}</span>
+                        <span>🌍 ${l.country || 'N/A'}</span>
+                        <span class="badge">${formatDate(l.created_at)}</span>
+                    </div>
+                    <pre>${l.message}</pre>
+                </div>
+            `).join('');
+        }
+
+        function renderQuotes(quotes) {
+            const container = document.getElementById('quotes-container');
+            if (!quotes.length) return container.innerHTML = '<p>No quotes found.</p>';
+            container.innerHTML = quotes.map(q => `
+                <div class="card">
+                    <h3>${q.name} - ${q.quantity}x ${q.service}</h3>
+                    <div class="meta">
+                        <span>📧 ${q.email}</span>
+                        <span>📞 ${q.phone || 'N/A'}</span>
+                        <span>🌍 ${q.country || 'N/A'}</span>
+                        <span class="badge" style="background:var(--gold);color:#000">No Pricing Yet</span>
+                        <span class="badge">${formatDate(q.created_at)}</span>
+                    </div>
+                    <div style="font-size: 0.9em; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                        <div><strong>Size:</strong> ${q.size || '-'}</div>
+                        <div><strong>Paper:</strong> ${q.paper_type || '-'}</div>
+                        <div><strong>Finishing:</strong> ${q.finishing || '-'}</div>
+                        <div><strong>Sides:</strong> ${q.sides || '-'}</div>
+                        <div style="grid-column: span 2"><strong>Artwork Ready:</strong> ${q.artwork_ready ? 'Yes' : 'No'}</div>
+                    </div>
+                    <pre>${q.notes || 'No notes'}</pre>
+                </div>
+            `).join('');
+        }
+
+        async function init() {
+            const [leads, quotes] = await Promise.all([fetchData('leads'), fetchData('quotes')]);
+            renderLeads(leads);
+            renderQuotes(quotes);
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('leads-container').classList.add('hidden');
+            document.getElementById('quotes-container').classList.add('hidden');
+            
+            document.getElementById(tabId + '-container').classList.remove('hidden');
+        }
+
+        init();
+    </script>
+</body>
+</html>

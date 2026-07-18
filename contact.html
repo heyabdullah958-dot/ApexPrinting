@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Apex Print Hub - Contact Us for a Custom Print Quote.">
+    <title>Contact Us | Apex Print Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <img src="logo.jpeg" alt="Apex Printing Solutions" class="nav-logo-img">
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="services.html" class="nav-link">Products</a></li>
+                <li><a href="index.html#process" class="nav-link">Process</a></li>
+                <li><a href="index.html#why-us" class="nav-link">Why Apex</a></li>
+                <li><a href="contact.html" class="nav-link active">Contact</a></li>
+                <li class="currency-selector-li">
+                    <select id="currencySelector" class="currency-select" aria-label="Select Currency">
+                        <option value="USD">USD ($)</option>
+                        <option value="AED">AED (د.إ)</option>
+                        <option value="SAR">SAR (ر.س)</option>
+                        <option value="PKR">PKR (Rs.)</option>
+                    </select>
+                </li>
+                <li><a href="contact.html" class="btn btn-primary" style="margin-left: 1rem; padding: 0.75rem 1.5rem;">Get a Quote</a></li>
+                <li><button class="btn btn-outline" style="margin-left: 0.5rem; padding: 0.75rem 1.5rem;" onclick="window.openCartModal()">Cart <span id="cartCount">(0)</span></button></li>
+                <li><button class="btn btn-outline" style="margin-left: 0.5rem; padding: 0.75rem 1.5rem;" onclick="openSignUpModal()">Sign Up</button></li>
+            </ul>
+            <button class="hamburger" id="hamburger" aria-label="Toggle Navigation">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="hero" style="min-height: 40vh;">
+        <div class="hero-bg" style="opacity: 0.25;"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-grid"></div>
+        
+        <div class="container" style="min-height: auto; padding-top: calc(var(--nav-h) + 4rem); padding-bottom: 2rem; display: block; text-align: center;">
+            <div class="hero-eyebrow" style="justify-content: center; animation-delay: 0.1s;">
+                <div class="eyebrow-line"></div>
+                <span>Get In Touch</span>
+                <div class="eyebrow-line"></div>
+            </div>
+            <h1 style="font-size: clamp(3rem, 5vw, 4.5rem); animation-delay: 0.2s;">Let's Talk <span class="gold italic">Print</span></h1>
+            <p class="hero-desc" style="margin: 0 auto; animation-delay: 0.3s; max-width: 600px;">Ready to elevate your brand's physical presence? Fill out the form below or reach out directly.</p>
+        </div>
+    </header>
+
+    <!-- Contact Section -->
+    <div style="background: var(--black); padding: 5rem 0 8rem;">
+        <div class="container">
+            <div class="contact-layout">
+                
+                <!-- Contact Info -->
+                <div class="reveal-left">
+                    <h2 class="section-title" style="font-size: 2.2rem; margin-bottom: 1.5rem;">We're Here to <span class="serif">Help</span></h2>
+                    <div class="gold-line left" style="margin-bottom: 2.5rem;"></div>
+                    
+                    <p style="color: var(--gray); font-size: 1.1rem; line-height: 1.8; margin-bottom: 3rem;">Whether you need a custom quote, have a question about our capabilities, or want to check on an existing order, our team is ready to assist you.</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 2.5rem;">
+                        <div style="display: flex; align-items: center; gap: 1.5rem;">
+                            <div style="width: 50px; height: 50px; border-radius: 50%; border: 1px solid rgba(201,168,76,0.3); background: rgba(201,168,76,0.05); display: flex; align-items: center; justify-content: center; color: var(--gold); flex-shrink: 0;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            </div>
+                            <div>
+                                <h4 style="font-family: var(--font-label); font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 0.5rem;">Headquarters</h4>
+                                <p style="color: var(--white); font-size: 1.1rem; line-height: 1.5;">123 Printing Ave, Design District<br>New York, NY 10001</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 1.5rem;">
+                            <div style="width: 50px; height: 50px; border-radius: 50%; border: 1px solid rgba(201,168,76,0.3); background: rgba(201,168,76,0.05); display: flex; align-items: center; justify-content: center; color: var(--gold); flex-shrink: 0;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                            </div>
+                            <div>
+                                <h4 style="font-family: var(--font-label); font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 0.5rem;">Phone</h4>
+                                <p style="color: var(--white); font-size: 1.1rem;"><a href="tel:+1234567890">+1 (234) 567-890</a></p>
+                                <p style="color: var(--gray); font-size: 0.9rem; margin-top: 0.25rem;">Mon-Fri, 9am - 6pm EST</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 1.5rem;">
+                            <div style="width: 50px; height: 50px; border-radius: 50%; border: 1px solid rgba(201,168,76,0.3); background: rgba(201,168,76,0.05); display: flex; align-items: center; justify-content: center; color: var(--gold); flex-shrink: 0;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                            </div>
+                            <div>
+                                <h4 style="font-family: var(--font-label); font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 0.5rem;">Email</h4>
+                                <p style="color: var(--white); font-size: 1.1rem;"><a href="mailto:quotes@apexprinthub.com">quotes@apexprinthub.com</a></p>
+                                <p style="color: var(--gray); font-size: 0.9rem; margin-top: 0.25rem;">We reply within 24 hours</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 4rem; border-radius: var(--radius); overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);">
+                        <img src="contact_img.png" alt="Premium Printing" style="width: 100%; height: auto; display: block; object-fit: cover; aspect-ratio: 16/10;">
+                    </div>
+                </div>
+                
+                <!-- Contact Form -->
+                <div class="reveal-right form-card">
+                    <form id="contactForm" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div class="form-group">
+                                <label for="firstName" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">First Name</label>
+                                <input type="text" id="firstName" name="firstName" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Last Name</label>
+                                <input type="text" id="lastName" name="lastName" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Email Address</label>
+                            <input type="email" id="email" name="email" class="form-control" required>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div class="form-group">
+                                <label for="phone" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Phone</label>
+                                <input type="tel" id="phone" name="phone" class="form-control" placeholder="+971 XX XXX XXXX">
+                            </div>
+                            <div class="form-group">
+                                <label for="country" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Region</label>
+                                <select id="country" name="country" class="form-control">
+                                    <option value="UAE">🇦🇪 UAE / Dubai</option>
+                                    <option value="PKR">🇵🇰 Pakistan</option>
+                                    <option value="SAR">🇸🇦 Saudi Arabia</option>
+                                    <option value="Other">🌍 Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="service" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Service Needed</label>
+                            <select id="service" name="service" class="form-control" required>
+                                <option value="" disabled selected>Select a service</option>
+                                <option value="Business Cards">Business Cards</option>
+                                <option value="Flyers">Flyers</option>
+                                <option value="Brochures">Brochures</option>
+                                <option value="Booklets">Booklets</option>
+                                <option value="Posters">Posters</option>
+                                <option value="Letterheads">Letterheads</option>
+                                <option value="NCR Forms">NCR Forms</option>
+                                <option value="Presentation Folders">Presentation Folders</option>
+                                <option value="Other">Other / Custom</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="message" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Project Details</label>
+                            <textarea id="message" name="message" class="form-control" rows="5" required placeholder="Tell us about your project — quantity, size, special requirements..."></textarea>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div class="form-group">
+                                <label for="paymentMethod" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Payment Method</label>
+                                <select id="paymentMethod" name="paymentMethod" class="form-control" required>
+                                    <option value="COD" selected>Cash on Delivery (COD)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="design_file" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Upload Design</label>
+                                <input type="file" id="design_file" name="design_file" class="form-control" accept="image/*,.pdf,.ai,.psd">
+                            </div>
+                        </div>
+
+                        <div id="formError" style="display:none; background: rgba(220,53,69,0.1); border: 1px solid rgba(220,53,69,0.3); color: #ff6b6b; padding: 0.8rem 1rem; border-radius: 6px; font-size: 0.9rem;"></div>
+
+                        <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">Send Request</button>
+                    </form>
+
+                    <div id="formSuccess" style="display: none; text-align: center; padding: 2rem 0;">
+                        <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(201,168,76,0.1); border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: var(--gold);">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
+                        <h3 style="font-family: var(--font-serif); font-size: 1.5rem; color: var(--white); margin-bottom: 0.5rem;">Request Received!</h3>
+                        <p style="color: var(--gray); font-size: 0.95rem;">Thank you for reaching out. A premium print specialist will contact you within 24 hours.</p>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <!-- Brand -->
+                <div>
+                    <div class="logo" style="margin-bottom: 1.5rem;">
+                        <div class="logo-mark">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        </div>
+                        <div class="logo-text-wrap">
+                            <span class="logo-name">APEX</span>
+                            <span class="logo-tagline">Print Hub</span>
+                        </div>
+                    </div>
+                    <p style="color: var(--gray); font-size: 0.95rem; max-width: 300px; margin-bottom: 2rem;">Premium commercial printing services for brands that demand excellence and uncompromising quality.</p>
+                    <div style="display: flex; gap: 1rem;">
+                        <a href="#" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: var(--white);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
+                        <a href="#" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: var(--white);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
+                        <a href="#" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: var(--white);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg></a>
+                    </div>
+                </div>
+                
+                <!-- Links -->
+                <div>
+                    <h4 style="font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem; color: var(--gold);">Quick Links</h4>
+                    <ul style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <li><a href="index.html" style="color: var(--gray); font-size: 0.95rem;">Home</a></li>
+                        <li><a href="services.html" style="color: var(--gray); font-size: 0.95rem;">Products</a></li>
+                        <li><a href="contact.html" style="color: var(--gray); font-size: 0.95rem;">Contact Us</a></li>
+                        <li><a href="contact.html" style="color: var(--gray); font-size: 0.95rem;">Request Quote</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <h4 style="font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem; color: var(--gold);">Contact</h4>
+                    <ul style="display: flex; flex-direction: column; gap: 1rem;">
+                        <li style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                            <svg style="color: var(--gold); flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            <span style="color: var(--gray); font-size: 0.95rem; line-height: 1.5;">123 Printing Ave, Design District<br>New York, NY 10001</span>
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 0.75rem;">
+                            <svg style="color: var(--gold); flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                            <a href="tel:+1234567890" style="color: var(--gray); font-size: 0.95rem;">+1 (234) 567-890</a>
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 0.75rem;">
+                            <svg style="color: var(--gold); flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                            <a href="mailto:quotes@apexprinthub.com" style="color: var(--gray); font-size: 0.95rem;">quotes@apexprinthub.com</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 2rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--gray);">
+                <p>&copy; <span id="year">2026</span> Apex Print Hub. All rights reserved.</p>
+                <div style="display: flex; gap: 1.5rem;">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+    // ============================================================
+    // CONTACT FORM — Backend Connection
+    // Change BACKEND_URL to your deployed backend URL
+    // ============================================================
+    const BACKEND_URL = 'https://apex-printing-backend.onrender.com'; // TODO: update after deploy
+
+    document.getElementById('contactForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const btn = document.getElementById('submitBtn');
+        const errDiv = document.getElementById('formError');
+        const successDiv = document.getElementById('formSuccess');
+        errDiv.style.display = 'none';
+
+        // Collect field values
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName  = document.getElementById('lastName').value.trim();
+        const name      = `${firstName} ${lastName}`.trim();
+        const email     = document.getElementById('email').value.trim();
+        const phone     = document.getElementById('phone').value.trim();
+        const country   = document.getElementById('country').value;
+        const service   = document.getElementById('service').value;
+        const message   = document.getElementById('message').value.trim();
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        const designFile = document.getElementById('design_file').files[0];
+
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('email', email);
+        formData.append('phone', phone);
+        formData.append('country', country);
+        formData.append('service', service);
+        formData.append('message', message);
+        formData.append('paymentMethod', paymentMethod);
+        if (designFile) formData.append('design_file', designFile);
+
+        // Loading state
+        btn.disabled = true;
+        btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;"><svg style="animation:spin 1s linear infinite" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>Sending...</span>';
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/contact`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'Something went wrong. Please try again.');
+            }
+
+            // Show success
+            this.style.display = 'none';
+            successDiv.style.display = 'block';
+
+        } catch (err) {
+            // Show error
+            errDiv.textContent = err.message;
+            errDiv.style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = 'Send Request';
+        }
+    });
+
+    // Spinner keyframe (add only once)
+    if (!document.getElementById('spinStyle')) {
+        const s = document.createElement('style');
+        s.id = 'spinStyle';
+        s.textContent = '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+        document.head.appendChild(s);
+    }
+    </script>
+    <!-- Sign Up Modal -->
+    <div id="signupModal" class="modal-backdrop">
+        <div class="modal-content auth-modal">
+            <button class="modal-close" onclick="closeSignUpModal()">&times;</button>
+            <h2 class="modal-title">Create an Account</h2>
+            <p class="modal-desc">Join Prestige Press for exclusive perks and faster checkout.</p>
+            <form class="auth-form" onsubmit="event.preventDefault(); alert('Account created!'); closeSignUpModal();">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" required placeholder="john@company.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Sign Up</button>
+            </form>
+            <p class="auth-switch">Already have an account? <a href="#" onclick="alert('Sign In clicked')">Sign In</a></p>
+        </div>
+    </div>
+
+    <!-- ===== PREMIUM SPLASH SCREEN ===== -->
+    <div id="splash-screen">
+        <div class="splash-bg"></div>
+        <div class="splash-rings">
+            <div class="splash-ring ring-1"></div>
+            <div class="splash-ring ring-2"></div>
+            <div class="splash-ring ring-3"></div>
+        </div>
+        <div class="splash-content">
+            <img src="logo.jpeg" alt="Apex Printing Solutions" class="splash-logo">
+            <div class="splash-text">
+                <h1 class="splash-title">APEX</h1>
+                <p class="splash-subtitle">PRINTING SOLUTIONS</p>
+            </div>
+            <div class="splash-loader"><div class="loader-bar"></div></div>
+            <p class="splash-tagline">Where Every Print Tells a Story</p>
+        </div>
+    </div>
+    <style>
+    #splash-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0a0f;z-index:99999;display:flex;align-items:center;justify-content:center;transition:opacity .8s ease,visibility .8s ease}
+    #splash-screen.fade-out{opacity:0;visibility:hidden}
+    .splash-bg{position:absolute;inset:0;background:radial-gradient(ellipse at center,#1a1200 0%,#0a0a0f 70%)}
+    .splash-rings{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+    .splash-ring{position:absolute;border-radius:50%;border:1px solid rgba(212,175,55,.15);top:50%;left:50%;transform:translate(-50%,-50%);animation:ringPulse 3s ease-in-out infinite}
+    .ring-1{width:400px;height:400px}.ring-2{width:600px;height:600px;animation-delay:.5s;border-color:rgba(212,175,55,.08)}.ring-3{width:800px;height:800px;animation-delay:1s;border-color:rgba(212,175,55,.04)}
+    @keyframes ringPulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.6}50%{transform:translate(-50%,-50%) scale(1.05);opacity:1}}
+    .splash-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:1.2rem}
+    .splash-logo{width:140px;height:140px;border-radius:50%;object-fit:cover;animation:logoEntrance 1s cubic-bezier(.34,1.56,.64,1) forwards;opacity:0;box-shadow:0 0 60px rgba(212,175,55,.4),0 0 120px rgba(212,175,55,.15)}
+    @keyframes logoEntrance{from{opacity:0;transform:scale(.3) rotate(-10deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+    .splash-text{text-align:center;animation:textSlideUp .8s ease .6s forwards;opacity:0;transform:translateY(20px)}
+    @keyframes textSlideUp{to{opacity:1;transform:translateY(0)}}
+    .splash-title{font-family:'Playfair Display','Georgia',serif;font-size:clamp(2.5rem,8vw,5rem);font-weight:900;background:linear-gradient(135deg,#b8860b 0%,#ffd700 40%,#d4af37 60%,#b8860b 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.3em;margin:0;line-height:1}
+    .splash-subtitle{font-size:clamp(.6rem,2vw,.85rem);letter-spacing:.5em;color:rgba(212,175,55,.7);margin:.3rem 0 0;font-weight:400;text-transform:uppercase}
+    .splash-loader{width:200px;height:2px;background:rgba(212,175,55,.15);border-radius:2px;overflow:hidden;animation:textSlideUp .8s ease 1s forwards;opacity:0}
+    .loader-bar{height:100%;width:0;background:linear-gradient(90deg,#b8860b,#ffd700,#d4af37);border-radius:2px;animation:loadProgress 1.8s ease 1.2s forwards;box-shadow:0 0 10px rgba(212,175,55,.6)}
+    @keyframes loadProgress{to{width:100%}}
+    .splash-tagline{font-size:.75rem;color:rgba(255,255,255,.3);letter-spacing:.15em;animation:textSlideUp .8s ease 1.4s forwards;opacity:0;font-style:italic}
+    .nav-logo-img{height:44px;width:44px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(212,175,55,.5);box-shadow:0 0 12px rgba(212,175,55,.25);transition:box-shadow .3s ease,transform .3s ease}
+    .nav-logo-img:hover{box-shadow:0 0 20px rgba(212,175,55,.5);transform:scale(1.05)}
+    </style>
+    <script>
+    (function(){
+        var s=document.getElementById('splash-screen');
+        if(!s)return;
+        if(sessionStorage.getItem('splashShown')){
+            s.style.display='none';
+            return;
+        }
+        sessionStorage.setItem('splashShown','true');
+        setTimeout(function(){s.classList.add('fade-out');setTimeout(function(){s.style.display='none'},900)},3000);
+    })();
+    </script>
+
+</body>
+</html>
