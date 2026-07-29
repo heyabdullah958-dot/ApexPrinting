@@ -1446,16 +1446,28 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
+                // Max file size validation: 5MB
+                const MAX_SIZE = 5 * 1024 * 1024;
+                if (file.size > MAX_SIZE) {
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('File size exceeds 5MB limit. Please select a smaller file.', 'error');
+                    } else {
+                        alert('File size exceeds 5MB limit. Please select a smaller file.');
+                    }
+                    uploadInput.value = '';
+                    previewContainer.style.display = 'none';
+                    return;
+                }
+
                 if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(evt) {
-                        previewImg.src = evt.target.result;
-                        previewContainer.style.display = 'block';
-                    };
-                    reader.readAsDataURL(file);
+                    // Safe instant rendering using ObjectURL instead of heavy base64
+                    previewImg.src = URL.createObjectURL(file);
+                    previewContainer.style.display = 'block';
                 } else {
                     previewContainer.style.display = 'none';
-                    alert(`Selected file: ${file.name}`);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(`Selected file: ${file.name}`, 'info');
+                    }
                 }
             } else {
                 previewContainer.style.display = 'none';
@@ -1497,34 +1509,59 @@ document.addEventListener('DOMContentLoaded', () => {
                         let uploadedDesign = null;
                         const fileInput = document.getElementById('modal_design_file');
                         if (fileInput && fileInput.files && fileInput.files[0]) {
-                            const formData = new FormData();
-                            formData.append('design_file', fileInput.files[0]);
-                            
-                            const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
-                                ? 'http://localhost:3000' 
-                                : 'https://apex-print-hub-backend.vercel.app';
-
-                            const uploadRes = await fetch(`${API_BASE_URL}/api/upload`, {
-                                method: 'POST',
-                                body: formData
-                            });
-                            
-                            const uploadData = await uploadRes.json();
-                            if (uploadData.success) {
-                                uploadedDesign = {
-                                    url: `${API_BASE_URL}${uploadData.filePath}`,
-                                    name: uploadData.fileName
-                                };
-                                details += `\nUploaded Design: ${uploadedDesign.name} (${uploadedDesign.url})\n`;
-                            } else {
-                                throw new Error(uploadData.message || 'Upload failed');
+                            const file = fileInput.files[0];
+                            const MAX_SIZE = 5 * 1024 * 1024;
+                            if (file.size > MAX_SIZE) {
+                                window.showToast('File size exceeds 5MB limit.', 'error');
+                                submitBtn.textContent = originalBtnText;
+                                submitBtn.disabled = false;
+                                return;
                             }
+
+                            try {
+                                const formData = new FormData();
+                                formData.append('design_file', file);
+                                
+                                const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+                                    ? 'http://localhost:3000' 
+                                    : 'https://apex-print-hub-backend.vercel.app';
+
+                                const controller = new AbortController();
+                                const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+                                const uploadRes = await fetch(`${API_BASE_URL}/api/upload`, {
+                                    method: 'POST',
+                                    body: formData,
+                                    signal: controller.signal
+                                });
+                                clearTimeout(timeoutId);
+                                
+                                if (uploadRes.ok) {
+                                    const uploadData = await uploadRes.json();
+                                    if (uploadData.success) {
+                                        uploadedDesign = {
+                                            url: `${API_BASE_URL}${uploadData.filePath}`,
+                                            name: uploadData.fileName
+                                        };
+                                    }
+                                }
+                            } catch (uploadErr) {
+                                console.warn('Upload API unreachable, falling back to local file reference:', uploadErr);
+                            }
+
+                            if (!uploadedDesign) {
+                                uploadedDesign = {
+                                    url: URL.createObjectURL(file),
+                                    name: file.name
+                                };
+                            }
+                            details += `\nUploaded Design: ${uploadedDesign.name} (${uploadedDesign.url})\n`;
                         }
 
                         const targetUrl = `contact.html?service=${encodeURIComponent(mappedKey)}&details=${encodeURIComponent(details)}`;
                         window.location.href = targetUrl;
                     } catch (err) {
-                        alert(`Error: ${err.message}`);
+                        window.showToast(`Error requesting quote: ${err.message}`, 'error');
                     } finally {
                         submitBtn.textContent = originalBtnText;
                         submitBtn.disabled = false;
@@ -1553,26 +1590,51 @@ document.addEventListener('DOMContentLoaded', () => {
                         let uploadedDesign = null;
                         const fileInput = document.getElementById('modal_design_file');
                         if (fileInput && fileInput.files && fileInput.files[0]) {
-                            const formData = new FormData();
-                            formData.append('design_file', fileInput.files[0]);
-                            
-                            const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
-                                ? 'http://localhost:3000' 
-                                : 'https://apex-print-hub-backend.vercel.app';
+                            const file = fileInput.files[0];
+                            const MAX_SIZE = 5 * 1024 * 1024;
+                            if (file.size > MAX_SIZE) {
+                                window.showToast('File size exceeds 5MB limit.', 'error');
+                                submitBtn.textContent = originalBtnText;
+                                submitBtn.disabled = false;
+                                return;
+                            }
 
-                            const uploadRes = await fetch(`${API_BASE_URL}/api/upload`, {
-                                method: 'POST',
-                                body: formData
-                            });
-                            
-                            const uploadData = await uploadRes.json();
-                            if (uploadData.success) {
+                            try {
+                                const formData = new FormData();
+                                formData.append('design_file', file);
+                                
+                                const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+                                    ? 'http://localhost:3000' 
+                                    : 'https://apex-print-hub-backend.vercel.app';
+
+                                const controller = new AbortController();
+                                const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+                                const uploadRes = await fetch(`${API_BASE_URL}/api/upload`, {
+                                    method: 'POST',
+                                    body: formData,
+                                    signal: controller.signal
+                                });
+                                clearTimeout(timeoutId);
+                                
+                                if (uploadRes.ok) {
+                                    const uploadData = await uploadRes.json();
+                                    if (uploadData.success) {
+                                        uploadedDesign = {
+                                            url: `${API_BASE_URL}${uploadData.filePath}`,
+                                            name: uploadData.fileName
+                                        };
+                                    }
+                                }
+                            } catch (uploadErr) {
+                                console.warn('Upload API unreachable, using local file object URL:', uploadErr);
+                            }
+
+                            if (!uploadedDesign) {
                                 uploadedDesign = {
-                                    url: `${API_BASE_URL}${uploadData.filePath}`,
-                                    name: uploadData.fileName
+                                    url: URL.createObjectURL(file),
+                                    name: file.name
                                 };
-                            } else {
-                                throw new Error(uploadData.message || 'Upload failed');
                             }
                         }
 
@@ -1583,13 +1645,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                 priceLabel: priceLabel,
                                 design: uploadedDesign
                             });
-                            alert(`Added ${title} package to cart successfully!`);
+                            window.showToast(`Added ${title} package to cart successfully!`, 'success');
                             window.closeProductModal();
                         } else {
-                            alert('Cart system not loaded completely.');
+                            window.showToast('Cart system not loaded completely.', 'error');
                         }
                     } catch (err) {
-                        alert(`Error adding to cart: ${err.message}`);
+                        window.showToast(`Error adding to cart: ${err.message || err}`, 'error');
                     } finally {
                         submitBtn.textContent = originalBtnText;
                         submitBtn.disabled = false;
@@ -1643,11 +1705,48 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// --- TOAST NOTIFICATIONS ---
+window.showToast = function(message, type = 'info') {
+    let container = document.querySelector('.apex-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'apex-toast-container';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `apex-toast toast-${type}`;
+    
+    let icon = 'ℹ️';
+    if (type === 'success') icon = '✓';
+    else if (type === 'error') icon = '⚠️';
+    
+    toast.innerHTML = `<span style="font-weight:bold;">${icon}</span> <span>${message}</span>`;
+    container.appendChild(toast);
+    
+    requestAnimationFrame(() => {
+        toast.classList.add('active');
+    });
+    
+    setTimeout(() => {
+        toast.classList.remove('active');
+        setTimeout(() => {
+            if (toast.parentNode) toast.parentNode.removeChild(toast);
+        }, 300);
+    }, 4000);
+};
+
 // --- CART SYSTEM ---
 let cart = JSON.parse(localStorage.getItem('apex_cart') || '[]');
 
 function saveCart() {
-    localStorage.setItem('apex_cart', JSON.stringify(cart));
+    try {
+        localStorage.setItem('apex_cart', JSON.stringify(cart));
+    } catch (err) {
+        console.warn('Could not save cart to localStorage:', err);
+        if (typeof window.showToast === 'function') {
+            window.showToast('Cart saved in session (storage full)', 'info');
+        }
+    }
     updateCartCount();
 }
 

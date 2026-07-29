@@ -361,6 +361,11 @@
         </div>
     </div>
 
+    <script>
+    if (sessionStorage.getItem('hasSeenSplash') || sessionStorage.getItem('splashSeen') || sessionStorage.getItem('splashShown')) {
+        document.write('<style>#splash-screen { display: none !important; }</style>');
+    }
+    </script>
     <!-- ===== PREMIUM SPLASH SCREEN ===== -->
     <div id="splash-screen">
         <div class="splash-bg"></div>
@@ -405,11 +410,11 @@
     (function(){
         var s=document.getElementById('splash-screen');
         if(!s)return;
-        if(sessionStorage.getItem('splashShown')){
+        if(sessionStorage.getItem('hasSeenSplash')||sessionStorage.getItem('splashSeen')||sessionStorage.getItem('splashShown')){
             s.style.display='none';
             return;
         }
-        sessionStorage.setItem('splashShown','true');
+        sessionStorage.setItem('hasSeenSplash','true');
         setTimeout(function(){s.classList.add('fade-out');setTimeout(function(){s.style.display='none'},900)},3000);
     })();
     </script>

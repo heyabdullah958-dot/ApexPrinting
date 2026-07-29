@@ -343,6 +343,11 @@
         </div>
     </div>
 
+    <script>
+    if (sessionStorage.getItem('hasSeenSplash') || sessionStorage.getItem('splashSeen') || sessionStorage.getItem('splashShown')) {
+        document.write('<style>#splash-screen { display: none !important; }</style>');
+    }
+    </script>
     <!-- ===== PREMIUM SPLASH SCREEN ===== -->
     <div id="splash-screen">
         <div class="splash-bg"></div>
@@ -512,12 +517,12 @@
         const splash = document.getElementById('splash-screen');
         if (!splash) return;
         
-        if (sessionStorage.getItem('splashSeen')) {
+        if (sessionStorage.getItem('hasSeenSplash') || sessionStorage.getItem('splashSeen') || sessionStorage.getItem('splashShown')) {
             splash.style.display = 'none';
             return;
         }
         
-        sessionStorage.setItem('splashSeen', 'true');
+        sessionStorage.setItem('hasSeenSplash', 'true');
         
         // Fade out after 3 seconds
         setTimeout(function() {
