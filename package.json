@@ -1,0 +1,16 @@
+{
+  "name": "apex-printing-hub",
+  "version": "1.0.0",
+  "description": "Apex Printing Clean Source Code Workspace",
+  "scripts": {
+    "export:code": "node scripts/export-clean-code.js",
+    "export:python": "python export_clean.py"
+  },
+  "keywords": [
+    "apex",
+    "printing",
+    "exporter"
+  ],
+  "author": "Apex Print Hub",
+  "license": "UNLICENSED"
+}
