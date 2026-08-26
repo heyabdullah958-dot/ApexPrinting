@@ -15,20 +15,11 @@
             <a href="index.html" class="logo">
                 <img src="logo.jpeg" alt="Apex Printing Solutions" class="nav-logo-img">
             </a>
-            <ul class="nav-links" id="navLinks">
                 <li><a href="index.html" class="nav-link">Home</a></li>
                 <li><a href="services.html" class="nav-link">Products</a></li>
                 <li><a href="index.html#process" class="nav-link">Process</a></li>
                 <li><a href="index.html#why-us" class="nav-link">Why Apex</a></li>
                 <li><a href="contact.html" class="nav-link active">Contact</a></li>
-                <li class="currency-selector-li">
-                    <select id="currencySelector" class="currency-select" aria-label="Select Currency">
-                        <option value="USD">USD ($)</option>
-                        <option value="AED">AED (د.إ)</option>
-                        <option value="SAR">SAR (ر.س)</option>
-                        <option value="PKR">PKR (Rs.)</option>
-                    </select>
-                </li>
                 <li><a href="contact.html" class="btn btn-primary" style="margin-left: 1rem; padding: 0.75rem 1.5rem;">Get a Quote</a></li>
                 <li><button class="btn btn-outline" style="margin-left: 0.5rem; padding: 0.75rem 1.5rem;" onclick="window.openCartModal()">Cart <span id="cartCount">(0)</span></button></li>
                 <li><button class="btn btn-outline" style="margin-left: 0.5rem; padding: 0.75rem 1.5rem;" onclick="openSignUpModal()">Sign Up</button></li>
@@ -166,22 +157,14 @@
                             <textarea id="message" name="message" class="form-control" rows="5" required placeholder="Tell us about your project — quantity, size, special requirements..."></textarea>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-                            <div class="form-group">
-                                <label for="paymentMethod" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Payment Method</label>
-                                <select id="paymentMethod" name="paymentMethod" class="form-control" required>
-                                    <option value="COD" selected>Cash on Delivery (COD)</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="design_file" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Upload Design</label>
-                                <input type="file" id="design_file" name="design_file" class="form-control" accept="image/*,.pdf,.ai,.psd">
-                            </div>
+                        <div class="form-group">
+                            <label for="design_file" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Upload Artwork / Design (Optional)</label>
+                            <input type="file" id="design_file" name="design_file" class="form-control" accept="image/*,.pdf,.ai,.psd">
                         </div>
 
                         <div id="formError" style="display:none; background: rgba(220,53,69,0.1); border: 1px solid rgba(220,53,69,0.3); color: #ff6b6b; padding: 0.8rem 1rem; border-radius: 6px; font-size: 0.9rem;"></div>
 
-                        <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">Send Request</button>
+                        <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">Submit Order Request &rarr;</button>
                     </form>
 
                     <div id="formSuccess" style="display: none; text-align: center; padding: 2rem 0;">
@@ -264,85 +247,13 @@
     <script src="script.js"></script>
     <script>
     // ============================================================
-    // CONTACT FORM — Backend Connection
-    // Change BACKEND_URL to your deployed backend URL
-    // ============================================================
-    const BACKEND_URL = 'https://apex-printing-backend.onrender.com'; // TODO: update after deploy
-
-    document.getElementById('contactForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const btn = document.getElementById('submitBtn');
-        const errDiv = document.getElementById('formError');
-        const successDiv = document.getElementById('formSuccess');
-        errDiv.style.display = 'none';
-
-        // Collect field values
-        const firstName = document.getElementById('firstName').value.trim();
-        const lastName  = document.getElementById('lastName').value.trim();
-        const name      = `${firstName} ${lastName}`.trim();
-        const email     = document.getElementById('email').value.trim();
-        const phone     = document.getElementById('phone').value.trim();
-        const country   = document.getElementById('country').value;
-        const service   = document.getElementById('service').value;
-        const message   = document.getElementById('message').value.trim();
-        const paymentMethod = document.getElementById('paymentMethod').value;
-        const designFile = document.getElementById('design_file').files[0];
-
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('email', email);
-        formData.append('phone', phone);
-        formData.append('country', country);
-        formData.append('service', service);
-        formData.append('message', message);
-        formData.append('paymentMethod', paymentMethod);
-        if (designFile) formData.append('design_file', designFile);
-
-        // Loading state
-        btn.disabled = true;
-        btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;"><svg style="animation:spin 1s linear infinite" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>Sending...</span>';
-
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/contact`, {
-                method: 'POST',
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(data.message || 'Something went wrong. Please try again.');
-            }
-
-            // Show success
-            this.style.display = 'none';
-            successDiv.style.display = 'block';
-
-        } catch (err) {
-            // Show error
-            errDiv.textContent = err.message;
-            errDiv.style.display = 'block';
-            btn.disabled = false;
-            btn.innerHTML = 'Send Request';
-        }
-    });
-
-    // Spinner keyframe (add only once)
-    if (!document.getElementById('spinStyle')) {
-        const s = document.createElement('style');
-        s.id = 'spinStyle';
-        s.textContent = '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
-        document.head.appendChild(s);
-    }
-    </script>
     <!-- Sign Up Modal -->
     <div id="signupModal" class="modal-backdrop">
         <div class="modal-content auth-modal">
             <button class="modal-close" onclick="closeSignUpModal()">&times;</button>
             <h2 class="modal-title">Create an Account</h2>
-            <p class="modal-desc">Join Prestige Press for exclusive perks and faster checkout.</p>
-            <form class="auth-form" onsubmit="event.preventDefault(); alert('Account created!'); closeSignUpModal();">
+            <p class="modal-desc">Join Apex Print Hub for exclusive perks and streamlined order tracking.</p>
+            <form class="auth-form" onsubmit="event.preventDefault(); if (typeof window.showToast === 'function') { window.showToast('Account creation feature coming soon!', 'info'); } else { alert('Account created!'); } closeSignUpModal();">
                 <div class="form-group">
                     <label>Full Name</label>
                     <input type="text" required placeholder="John Doe">
@@ -357,7 +268,7 @@
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Sign Up</button>
             </form>
-            <p class="auth-switch">Already have an account? <a href="#" onclick="alert('Sign In clicked')">Sign In</a></p>
+            <p class="auth-switch">Already have an account? <a href="#" onclick="if (typeof window.showToast === 'function') { window.showToast('Sign in portal coming soon!', 'info'); } else { alert('Sign In clicked'); }">Sign In</a></p>
         </div>
     </div>
 

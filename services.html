@@ -21,14 +21,6 @@
                 <li><a href="index.html#process" class="nav-link">Process</a></li>
                 <li><a href="index.html#why-us" class="nav-link">Why Apex</a></li>
                 <li><a href="contact.html" class="nav-link">Contact</a></li>
-                <li class="currency-selector-li">
-                    <select id="currencySelector" class="currency-select" aria-label="Select Currency">
-                        <option value="USD">USD ($)</option>
-                        <option value="AED">AED (د.إ)</option>
-                        <option value="SAR">SAR (ر.س)</option>
-                        <option value="PKR">PKR (Rs.)</option>
-                    </select>
-                </li>
                 <li><a href="contact.html" class="btn btn-primary" style="margin-left: 1rem; padding: 0.75rem 1.5rem;">Get a Quote</a></li>
                 <li><button class="btn btn-outline" style="margin-left: 0.5rem; padding: 0.75rem 1.5rem;" onclick="window.openCartModal()">Cart <span id="cartCount">(0)</span></button></li>
                 <li><button class="btn btn-outline" style="margin-left: 0.5rem; padding: 0.75rem 1.5rem;" onclick="openSignUpModal()">Sign Up</button></li>
@@ -504,8 +496,8 @@
         <div class="modal-content auth-modal">
             <button class="modal-close" onclick="closeSignUpModal()">&times;</button>
             <h2 class="modal-title">Create an Account</h2>
-            <p class="modal-desc">Join Prestige Press for exclusive perks and faster checkout.</p>
-            <form class="auth-form" onsubmit="event.preventDefault(); alert('Account created!'); closeSignUpModal();">
+            <p class="modal-desc">Join Apex Print Hub for exclusive perks and streamlined order tracking.</p>
+            <form class="auth-form" onsubmit="event.preventDefault(); if (typeof window.showToast === 'function') { window.showToast('Account creation feature coming soon!', 'info'); } else { alert('Account created!'); } closeSignUpModal();">
                 <div class="form-group">
                     <label>Full Name</label>
                     <input type="text" required placeholder="John Doe">
@@ -520,7 +512,7 @@
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Sign Up</button>
             </form>
-            <p class="auth-switch">Already have an account? <a href="#" onclick="alert('Sign In clicked')">Sign In</a></p>
+            <p class="auth-switch">Already have an account? <a href="#" onclick="if (typeof window.showToast === 'function') { window.showToast('Sign in portal coming soon!', 'info'); } else { alert('Sign In clicked'); }">Sign In</a></p>
         </div>
     </div>
 
@@ -550,19 +542,13 @@
                         <span class="stars">★★★★★</span> <span style="color: var(--gray); font-size: 0.9rem;">(4.8 · 1,240 reviews)</span>
                     </div>
                     <p id="modalDesc" class="modal-product-desc">Branded material that communicates professionalism in every piece.</p>
-                    
-                    <div class="product-pricing">
-                        <span id="modalPrice" class="price-amount">$9.99</span>
-                        <br>
-                        <span class="price-label">Starting price · options adjust the total</span>
-                    </div>
 
                     <form class="product-options-form" id="productOptionsForm" style="display: flex; flex-direction: column; gap: 1.25rem;">
                         <div id="modalOptionsContainer" style="display: flex; flex-direction: column; gap: 1.25rem;">
                             <!-- Options will be dynamically populated here -->
                         </div>
                         
-                        <button type="submit" id="modalSubmitBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 1rem; font-size: 1.1rem; justify-content: center;">Add to Cart &rarr;</button>
+                        <button type="submit" id="modalSubmitBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 1rem; font-size: 1.1rem; justify-content: center;">Add to Order Request &rarr;</button>
                     </form>
                 </div>
             </div>

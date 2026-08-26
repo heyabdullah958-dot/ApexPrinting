@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Define backend URL based on environment
     const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
         ? 'http://localhost:3000' 
-        : 'https://apex-print-hub-backend.vercel.app'; // Replace with actual prod URL
+        : (window.location.origin.includes('vercel.app') ? window.location.origin : 'https://apex-printing.vercel.app');
     
     // Set current year in footer
     const yearEl = document.getElementById('year');
@@ -205,10 +205,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 7. Contact Form Validation (contact.html)
     const contactForm = document.getElementById('contactForm');
     const formSuccess = document.getElementById('formSuccess');
+    const formError = document.getElementById('formError');
     
     if (contactForm) {
-        contactForm.addEventListener('submit', (e) => {
+        contactForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (formError) formError.style.display = 'none';
             
             let isValid = true;
             
@@ -232,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Validate Email
             const email = document.getElementById('email');
-            const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email.value)) {
                 showError(email);
                 isValid = false;
@@ -259,53 +261,64 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             if (isValid) {
-                // Submit form to backend
                 const submitBtn = contactForm.querySelector('button[type="submit"]');
-                const originalText = submitBtn.textContent;
-                submitBtn.textContent = 'Sending...';
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;">Submitting Request...</span>';
                 submitBtn.disabled = true;
                 submitBtn.style.opacity = '0.7';
                 
                 const fullName = `${firstName.value.trim()} ${lastName.value.trim()}`;
+                const phone = document.getElementById('phone') ? document.getElementById('phone').value.trim() : '';
+                const country = document.getElementById('country') ? document.getElementById('country').value : '';
+                const fileInput = document.getElementById('design_file');
+                const designFile = fileInput && fileInput.files ? fileInput.files[0] : null;
                 
-                const formData = {
-                    name: fullName,
-                    email: email.value.trim(),
-                    service: service.value,
-                    message: message.value.trim()
-                };
+                const formData = new FormData();
+                formData.append('name', fullName);
+                formData.append('email', email.value.trim());
+                formData.append('phone', phone);
+                formData.append('country', country);
+                formData.append('service', service.value);
+                formData.append('message', message.value.trim());
+                if (designFile) {
+                    formData.append('design_file', designFile);
+                }
 
-                fetch(`${API_BASE_URL}/api/contact`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/contact`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || 'Error submitting order request');
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        contactForm.style.display = 'none';
+
+                    contactForm.style.display = 'none';
+                    if (formSuccess) {
                         formSuccess.style.display = 'block';
                         formSuccess.style.animation = 'fadeIn 0.5s ease backwards';
-                        // Scroll to success message
                         formSuccess.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    } else {
-                        throw new Error(data.message || 'Error submitting form');
                     }
-                })
-                .catch(error => {
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Your order request has been submitted successfully!', 'success');
+                    }
+                } catch (error) {
                     console.error('Error submitting form:', error);
-                    alert('There was an error sending your request. Please try again later.');
-                    submitBtn.textContent = originalText;
+                    if (formError) {
+                        formError.textContent = error.message || 'There was an error sending your request. Please try again.';
+                        formError.style.display = 'block';
+                    }
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(error.message || 'Failed to submit order request', 'error');
+                    }
+                } finally {
+                    submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
                     submitBtn.style.opacity = '1';
-                });
+                }
             }
         });
     }
@@ -1391,11 +1404,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 select.style.transition = 'border-color 0.3s ease';
                 select.addEventListener('change', window.updatePrice);
                 
-                for (const [valName, delta] of Object.entries(optionValues)) {
+                for (const [valName] of Object.entries(optionValues)) {
                     const opt = document.createElement('option');
-                    opt.value = delta;
-                    const showDelta = !isLookupProduct && typeof delta === 'number' && delta > 0;
-                    opt.textContent = valName + (showDelta ? ` (+${window.formatPrice(delta)})` : '');
+                    opt.value = valName;
+                    opt.textContent = valName;
                     select.appendChild(opt);
                 }
                 
@@ -1410,7 +1422,7 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadGroup.style.marginBottom = '1.5rem';
         
         const uploadLabel = document.createElement('label');
-        uploadLabel.textContent = 'Upload Design';
+        uploadLabel.textContent = 'Upload Artwork / Design (Optional)';
         uploadLabel.style.display = 'block';
         uploadLabel.style.fontFamily = 'var(--font-serif)';
         uploadLabel.style.fontSize = '1.1rem';
@@ -1446,7 +1458,6 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                // Max file size validation: 5MB
                 const MAX_SIZE = 5 * 1024 * 1024;
                 if (file.size > MAX_SIZE) {
                     if (typeof window.showToast === 'function') {
@@ -1460,7 +1471,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 if (file.type.startsWith('image/')) {
-                    // Safe instant rendering using ObjectURL instead of heavy base64
                     previewImg.src = URL.createObjectURL(file);
                     previewContainer.style.display = 'block';
                 } else {
@@ -1479,185 +1489,95 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadGroup.appendChild(previewContainer);
         optionsContainer.appendChild(uploadGroup);
 
-        
-        // Configure Action Button (Cart vs Quote)
+        // Configure Action Button (Direct Inquiry / Add to Order Request)
         if (submitBtn) {
             submitBtn.style.display = 'flex';
-            if (pData.requiresQuote) {
-                submitBtn.textContent = 'Request a Quote →';
-                submitBtn.onclick = async function(e) {
-                    e.preventDefault();
+            submitBtn.textContent = 'Add to Order Request →';
+            submitBtn.onclick = async function(e) {
+                e.preventDefault();
+                
+                const originalBtnText = submitBtn.textContent;
+                submitBtn.textContent = 'Adding...';
+                submitBtn.disabled = true;
+
+                try {
+                    const options = [];
+                    const selects = optionsContainer.querySelectorAll('select.modal-option-select');
+                    selects.forEach(select => {
+                        const label = select.previousElementSibling.textContent;
+                        const val = select.options[select.selectedIndex].textContent;
+                        options.push({label, value: val});
+                    });
                     
-                    const originalBtnText = submitBtn.textContent;
-                    submitBtn.textContent = 'Processing...';
-                    submitBtn.disabled = true;
-
-                    try {
-                        let details = `Hello, I would like to request a quote for ${title} with the following options:\n`;
-                        const selects = optionsContainer.querySelectorAll('select.modal-option-select');
-                        selects.forEach(select => {
-                            const label = select.previousElementSibling.textContent;
-                            const val = select.options[select.selectedIndex].textContent;
-                            details += `- ${label}: ${val}\n`;
-                        });
-                        
-                        const priceLabel = document.getElementById('modalPrice');
-                        if (priceLabel) {
-                            details += `Estimated Package Value: ${priceLabel.textContent}\n`;
-                        }
-                        
-                        let uploadedDesign = null;
-                        const fileInput = document.getElementById('modal_design_file');
-                        if (fileInput && fileInput.files && fileInput.files[0]) {
-                            const file = fileInput.files[0];
-                            const MAX_SIZE = 5 * 1024 * 1024;
-                            if (file.size > MAX_SIZE) {
-                                window.showToast('File size exceeds 5MB limit.', 'error');
-                                submitBtn.textContent = originalBtnText;
-                                submitBtn.disabled = false;
-                                return;
-                            }
-
-                            try {
-                                const formData = new FormData();
-                                formData.append('design_file', file);
-                                
-                                const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
-                                    ? 'http://localhost:3000' 
-                                    : 'https://apex-print-hub-backend.vercel.app';
-
-                                const controller = new AbortController();
-                                const timeoutId = setTimeout(() => controller.abort(), 4000);
-
-                                const uploadRes = await fetch(`${API_BASE_URL}/api/upload`, {
-                                    method: 'POST',
-                                    body: formData,
-                                    signal: controller.signal
-                                });
-                                clearTimeout(timeoutId);
-                                
-                                if (uploadRes.ok) {
-                                    const uploadData = await uploadRes.json();
-                                    if (uploadData.success) {
-                                        uploadedDesign = {
-                                            url: `${API_BASE_URL}${uploadData.filePath}`,
-                                            name: uploadData.fileName
-                                        };
-                                    }
-                                }
-                            } catch (uploadErr) {
-                                console.warn('Upload API unreachable, falling back to local file reference:', uploadErr);
-                            }
-
-                            if (!uploadedDesign) {
-                                uploadedDesign = {
-                                    url: URL.createObjectURL(file),
-                                    name: file.name
-                                };
-                            }
-                            details += `\nUploaded Design: ${uploadedDesign.name} (${uploadedDesign.url})\n`;
+                    let uploadedDesign = null;
+                    const fileInput = document.getElementById('modal_design_file');
+                    if (fileInput && fileInput.files && fileInput.files[0]) {
+                        const file = fileInput.files[0];
+                        const MAX_SIZE = 5 * 1024 * 1024;
+                        if (file.size > MAX_SIZE) {
+                            window.showToast('File size exceeds 5MB limit.', 'error');
+                            submitBtn.textContent = originalBtnText;
+                            submitBtn.disabled = false;
+                            return;
                         }
 
-                        const targetUrl = `contact.html?service=${encodeURIComponent(mappedKey)}&details=${encodeURIComponent(details)}`;
-                        window.location.href = targetUrl;
-                    } catch (err) {
-                        window.showToast(`Error requesting quote: ${err.message}`, 'error');
-                    } finally {
-                        submitBtn.textContent = originalBtnText;
-                        submitBtn.disabled = false;
-                    }
-                };
-            } else {
-                submitBtn.textContent = 'Add to Cart →';
-                submitBtn.onclick = async function(e) {
-                    e.preventDefault();
-                    
-                    const originalBtnText = submitBtn.textContent;
-                    submitBtn.textContent = 'Adding...';
-                    submitBtn.disabled = true;
+                        try {
+                            const formData = new FormData();
+                            formData.append('design_file', file);
+                            
+                            const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+                                ? 'http://localhost:3000' 
+                                : (window.location.origin.includes('vercel.app') ? window.location.origin : 'https://apex-printing.vercel.app');
 
-                    try {
-                        const options = [];
-                        const selects = optionsContainer.querySelectorAll('select.modal-option-select');
-                        selects.forEach(select => {
-                            const label = select.previousElementSibling.textContent;
-                            const val = select.options[select.selectedIndex].textContent;
-                            options.push({label, value: val});
-                        });
-                        
-                        const priceLabel = document.getElementById('modalPrice') ? document.getElementById('modalPrice').textContent : null;
-                        
-                        let uploadedDesign = null;
-                        const fileInput = document.getElementById('modal_design_file');
-                        if (fileInput && fileInput.files && fileInput.files[0]) {
-                            const file = fileInput.files[0];
-                            const MAX_SIZE = 5 * 1024 * 1024;
-                            if (file.size > MAX_SIZE) {
-                                window.showToast('File size exceeds 5MB limit.', 'error');
-                                submitBtn.textContent = originalBtnText;
-                                submitBtn.disabled = false;
-                                return;
-                            }
+                            const controller = new AbortController();
+                            const timeoutId = setTimeout(() => controller.abort(), 4000);
 
-                            try {
-                                const formData = new FormData();
-                                formData.append('design_file', file);
-                                
-                                const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
-                                    ? 'http://localhost:3000' 
-                                    : 'https://apex-print-hub-backend.vercel.app';
-
-                                const controller = new AbortController();
-                                const timeoutId = setTimeout(() => controller.abort(), 4000);
-
-                                const uploadRes = await fetch(`${API_BASE_URL}/api/upload`, {
-                                    method: 'POST',
-                                    body: formData,
-                                    signal: controller.signal
-                                });
-                                clearTimeout(timeoutId);
-                                
-                                if (uploadRes.ok) {
-                                    const uploadData = await uploadRes.json();
-                                    if (uploadData.success) {
-                                        uploadedDesign = {
-                                            url: `${API_BASE_URL}${uploadData.filePath}`,
-                                            name: uploadData.fileName
-                                        };
-                                    }
-                                }
-                            } catch (uploadErr) {
-                                console.warn('Upload API unreachable, using local file object URL:', uploadErr);
-                            }
-
-                            if (!uploadedDesign) {
-                                uploadedDesign = {
-                                    url: URL.createObjectURL(file),
-                                    name: file.name
-                                };
-                            }
-                        }
-
-                        if (typeof window.addToCart === 'function') {
-                            window.addToCart({
-                                title: title,
-                                options: options,
-                                priceLabel: priceLabel,
-                                design: uploadedDesign
+                            const uploadRes = await fetch(`${API_BASE_URL}/api/upload`, {
+                                method: 'POST',
+                                body: formData,
+                                signal: controller.signal
                             });
-                            window.showToast(`Added ${title} package to cart successfully!`, 'success');
-                            window.closeProductModal();
-                        } else {
-                            window.showToast('Cart system not loaded completely.', 'error');
+                            clearTimeout(timeoutId);
+                            
+                            if (uploadRes.ok) {
+                                const uploadData = await uploadRes.json();
+                                if (uploadData.success) {
+                                    uploadedDesign = {
+                                        url: `${API_BASE_URL}${uploadData.filePath}`,
+                                        name: uploadData.fileName
+                                    };
+                                }
+                            }
+                        } catch (uploadErr) {
+                            console.warn('Upload API unreachable, using local file object URL:', uploadErr);
                         }
-                    } catch (err) {
-                        window.showToast(`Error adding to cart: ${err.message || err}`, 'error');
-                    } finally {
-                        submitBtn.textContent = originalBtnText;
-                        submitBtn.disabled = false;
+
+                        if (!uploadedDesign) {
+                            uploadedDesign = {
+                                url: URL.createObjectURL(file),
+                                name: file.name
+                            };
+                        }
                     }
-                };
-            }
+
+                    if (typeof window.addToCart === 'function') {
+                        window.addToCart({
+                            title: title,
+                            options: options,
+                            design: uploadedDesign
+                        });
+                        window.showToast(`Added ${title} to your order request!`, 'success');
+                        window.closeProductModal();
+                    } else {
+                        window.showToast('Cart system not loaded completely.', 'error');
+                    }
+                } catch (err) {
+                    window.showToast(`Error adding item: ${err.message || err}`, 'error');
+                } finally {
+                    submitBtn.textContent = originalBtnText;
+                    submitBtn.disabled = false;
+                }
+            };
         }
         
         window.currentProductPricing = {
@@ -1823,19 +1743,18 @@ function renderCartItems() {
             });
         }
         if (item.design) {
-            detailsHtml += `<div style="font-size:0.85rem;color:var(--gold);margin-top:0.5rem;"><strong style="color:var(--white-soft);">Design:</strong> <a href="${item.design.url}" target="_blank" style="color:var(--gold);text-decoration:underline;">${item.design.name}</a></div>`;
+            detailsHtml += `<div style="font-size:0.85rem;color:var(--gold);margin-top:0.5rem;"><strong style="color:var(--white-soft);">Artwork:</strong> <a href="${item.design.url}" target="_blank" style="color:var(--gold);text-decoration:underline;">${item.design.name}</a></div>`;
         }
         
         itemEl.innerHTML = `
             <div style="font-family:var(--font-serif);color:var(--gold);font-size:1.1rem;margin-bottom:0.5rem;">${item.quantity && item.quantity > 1 ? item.quantity + 'x ' : ''}${item.title}</div>
             ${detailsHtml}
-            <div style="margin-top:0.5rem;font-size:0.95rem;color:var(--white);">${item.priceLabel ? 'Est. ' + item.priceLabel : ''}</div>
-            <div style="margin-top:0.5rem;display:flex;align-items:center;gap:1rem;">
-                <button onclick="updateQuantity(${index}, -1)" style="background:var(--gold);color:#000;border:none;border-radius:4px;padding:0.2rem 0.6rem;cursor:pointer;">-</button>
-                <span>${item.quantity || 1}</span>
-                <button onclick="updateQuantity(${index}, 1)" style="background:var(--gold);color:#000;border:none;border-radius:4px;padding:0.2rem 0.6rem;cursor:pointer;">+</button>
+            <div style="margin-top:0.75rem;display:flex;align-items:center;gap:1rem;">
+                <button onclick="updateQuantity(${index}, -1)" style="background:var(--gold);color:#000;border:none;border-radius:4px;padding:0.2rem 0.6rem;cursor:pointer;font-weight:bold;">-</button>
+                <span style="font-size:0.95rem;color:var(--white);">${item.quantity || 1}</span>
+                <button onclick="updateQuantity(${index}, 1)" style="background:var(--gold);color:#000;border:none;border-radius:4px;padding:0.2rem 0.6rem;cursor:pointer;font-weight:bold;">+</button>
             </div>
-            <button onclick="removeFromCart(${index})" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#e74c3c;cursor:pointer;font-size:1.2rem;">&times;</button>
+            <button onclick="removeFromCart(${index})" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#e74c3c;cursor:pointer;font-size:1.2rem;" title="Remove Item">&times;</button>
         `;
         cartContainer.appendChild(itemEl);
     });
@@ -1860,7 +1779,7 @@ window.updateQuantity = function(index, change) {
 
 window.checkoutCart = function() {
     if (cart.length === 0) return;
-    let details = 'Hello, I would like to request a quote for the following items in my cart:\n\n';
+    let details = 'Hello, I would like to place an order request for the following items:\n\n';
     
     cart.forEach((item, i) => {
         const qty = item.quantity || 1;
@@ -1871,17 +1790,14 @@ window.checkoutCart = function() {
             });
         }
         if (item.design) {
-            details += `- Uploaded Design: ${item.design.name} (${item.design.url})\n`;
-        }
-        if (item.priceLabel) {
-            details += `- Estimated Price: ${item.priceLabel}\n`;
+            details += `- Uploaded Artwork: ${item.design.name} (${item.design.url})\n`;
         }
         details += '\n';
     });
     
-    details += 'Please let me know how to proceed.';
+    details += 'Please review my specifications and contact me with the final quote and proof.';
     
-    const targetUrl = `contact.html?service=Other&details=${encodeURIComponent(details)}`;
+    const targetUrl = `contact.html?service=Custom%20Order&details=${encodeURIComponent(details)}`;
     window.location.href = targetUrl;
 };
 
@@ -1894,9 +1810,9 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.innerHTML = `
         <div class="modal-content" style="max-width:500px; right: 0; position: absolute; margin: 0; height: 100%; max-height: 100%; border-radius: 0; padding: 2rem; overflow-y: auto;">
             <button class="modal-close" onclick="closeCartModal()" style="font-size:2rem;color:var(--white);">&times;</button>
-            <h2 style="font-family:var(--font-serif);color:var(--gold);margin-bottom:2rem;font-size:2rem;">Your Cart</h2>
+            <h2 style="font-family:var(--font-serif);color:var(--gold);margin-bottom:2rem;font-size:1.75rem;">Your Order Request</h2>
             <div id="cartItemsList"></div>
-            <button id="cartCheckoutBtn" class="btn btn-primary" style="width:100%;margin-top:2rem;display:none;" onclick="checkoutCart()">Checkout / Request Quote →</button>
+            <button id="cartCheckoutBtn" class="btn btn-primary" style="width:100%;margin-top:2rem;display:none;justify-content:center;" onclick="checkoutCart()">Submit Order Request &rarr;</button>
         </div>
     `;
     
@@ -1905,5 +1821,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     document.body.appendChild(overlay);
-    updateCartCount(); // ensure count is set
+    updateCartCount();
 });

@@ -15,5 +15,17 @@ Initial tracking of project changes.
 - Added 5MB max file size validation and lightweight `URL.createObjectURL` object preview rendering in `script.js`.
 - Handled API upload fetch failures gracefully using local object URL fallback, eliminating `Failed to fetch` error popups when adding products with attachments to cart.
 - Added `QuotaExceededError` protection to `saveCart()` in `script.js`.
-- Replaced browser `alert()` popups with styled `window.showToast()` notifications.
+---
 
+## Phase 1 — Convert Checkout to Inquiry Flow & Configure Nodemailer Notifications — 2026-08-26
+- **Frontend**:
+  - Removed currency selectors (`#currencySelector`) from `index.html`, `services.html`, and `contact.html`.
+  - Removed pricing elements (`.product-pricing`, `#modalPrice`, `.price-label`) from `services.html`.
+  - Stripped price additions (`(+AED 5.00)`) from option selectors in `script.js`.
+  - Transformed Cart modal into an "Order Request List" without financial totals; updated CTAs to "Submit Order Request →".
+  - Removed duplicate inline script with dead onrender URL in `contact.html` and consolidated single submit handler in `script.js` with full `FormData` and file attachment support.
+- **Backend**:
+  - Upgraded `email.js` with luxury branded responsive HTML emails, connection timeouts, and dual-recipient notifications (Client + Admin) for both contact/order inquiries and quote requests.
+  - Implemented asynchronous, non-blocking `Promise.allSettled()` email dispatch in `backend/routes/contact.js` and `backend/routes/quote.js`.
+  - Enhanced Supabase error handling to prevent unhandled database exceptions from blocking HTTP responses.
+  - Cleaned up validation rules in `backend/middleware/validate.js` to decouple obsolete payment method checks.

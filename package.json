@@ -12,5 +12,8 @@
     "exporter"
   ],
   "author": "Apex Print Hub",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "dependencies": {
+    "playwright": "^1.62.1"
+  }
 }

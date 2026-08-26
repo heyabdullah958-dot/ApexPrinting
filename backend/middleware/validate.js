@@ -4,10 +4,9 @@ const validateContact = [
   body('name').trim().isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 and 100 characters'),
   body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail(),
   body('phone').optional().trim(),
-  body('country').optional().trim().isIn(['UAE', 'SAR', 'PKR', 'Other']).withMessage('Invalid country'),
+  body('country').optional().trim(),
   body('service').trim().notEmpty().withMessage('Service is required'),
-  body('message').trim().isLength({ min: 10, max: 2000 }).withMessage('Message must be between 10 and 2000 characters'),
-  body('paymentMethod').optional().trim().isIn(['COD', '']).withMessage('Invalid payment method')
+  body('message').trim().isLength({ min: 5, max: 4000 }).withMessage('Message must be between 5 and 4000 characters')
 ];
 
 const validateQuote = [
