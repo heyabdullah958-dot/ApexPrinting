@@ -6,4 +6,6 @@ backend/.env
 uploads/
 backend/uploads/
 dist-export/
-.agents/
+.agents/
+New folder (2)/
+scripts/screenshots/

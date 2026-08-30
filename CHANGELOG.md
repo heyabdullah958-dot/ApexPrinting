@@ -27,5 +27,29 @@ Initial tracking of project changes.
 - **Backend**:
   - Upgraded `email.js` with luxury branded responsive HTML emails, connection timeouts, and dual-recipient notifications (Client + Admin) for both contact/order inquiries and quote requests.
   - Implemented asynchronous, non-blocking `Promise.allSettled()` email dispatch in `backend/routes/contact.js` and `backend/routes/quote.js`.
-  - Enhanced Supabase error handling to prevent unhandled database exceptions from blocking HTTP responses.
   - Cleaned up validation rules in `backend/middleware/validate.js` to decouple obsolete payment method checks.
+---
+
+## Phase 2 — Bespoke Editorial Hero & 3D Curved Cylinder Carousel — 2026-08-26
+- **Architecture & Motion**:
+  - Engineered 3D curved cylinder carousel in pure Vanilla JS and CSS3 without external 3D libraries.
+  - Trigonometric radial card placement (`rotateY(angle) translateZ(radius)`) with 2000px perspective and subtle 3D tilt.
+  - Interactive pointer drag with momentum physics (friction: 0.94), mouse wheel horizontal scrolling, and idle ambient drift.
+- **Editorial Layout & Design**:
+  - Replicated 1:1 editorial hero layout from reference video: bold display typography, subheadings, and twin pill actions ("Book a meeting" & "See Projects →").
+  - Preserved brand luxury palette (`#050505`, `#181818`, `#C9A84C` gold highlights) and populated cards with high-res 3D print assets.
+- **Isolation**:
+  - Confined strictly to localhost (`http://localhost:8000/index.html`) without deployment to Vercel production.
+---
+
+## Phase 3 — Authentic 3D Concave Product Showcase Carousel Implementation — 2026-08-27
+- **Concave Geometry & Physics Engine**:
+  - Implemented 3D Concave (inward-curving amphitheater) matrix: $X = R\sin\theta$, $Z = -R(1-\cos\theta)$, $\text{rotateY}(-\theta \times 0.85)$, $\text{scale} = 1 - (1-\cos\theta)\times 0.22$.
+  - Normalized relative angles continuously modulo $360^\circ$ into $[-180^\circ, +180^\circ]$ for jitter-free circular looping.
+  - Added smooth edge opacity culling ($|\theta| > 58^\circ$) and cosine-based dynamic z-indexing ($Z_{\text{index}} = 1000\cos\theta$).
+- **Authentic Catalog Binding**:
+  - Populated 16 cards across 8 authentic Apex print product categories with rich captions and high-resolution assets.
+- **Verification & Isolation**:
+  - Verified 100% on `localhost:8000` via automated Playwright test suite with 0 console errors; zero production deployment.
+
+

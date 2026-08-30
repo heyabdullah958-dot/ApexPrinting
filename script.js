@@ -1162,7 +1162,13 @@ async function loadPDFGallery(pdfPath, sourceCanvas) {
             canvasCopy.width = 50;
             canvasCopy.height = 50;
             const ctx = canvasCopy.getContext('2d');
-            ctx.drawImage(sourceCanvas, 0, 0, 50, 50);
+            if (sourceCanvas && sourceCanvas.getContext) {
+                ctx.drawImage(sourceCanvas, 0, 0, 50, 50);
+            } else if (typeof sourceCanvas === 'string' || (sourceCanvas && sourceCanvas.tagName === 'IMG')) {
+                const img = new Image();
+                img.onload = () => ctx.drawImage(img, 0, 0, 50, 50);
+                img.src = typeof sourceCanvas === 'string' ? sourceCanvas : sourceCanvas.src;
+            }
             thumb.appendChild(canvasCopy);
         } else {
             thumb.textContent = 'Page 1';
@@ -1584,12 +1590,23 @@ document.addEventListener('DOMContentLoaded', () => {
             basePrice: pData.basePrice
         };
         
-        // Copy canvas content if available as initial main image
-        if (sourceCanvas && modalMainCanvas) {
+        // Copy canvas content or image source if available as initial main image
+        if (modalMainCanvas) {
             const destCtx = modalMainCanvas.getContext('2d');
-            modalMainCanvas.width = sourceCanvas.width;
-            modalMainCanvas.height = sourceCanvas.height;
-            destCtx.drawImage(sourceCanvas, 0, 0);
+            if (sourceCanvas && sourceCanvas.getContext) {
+                modalMainCanvas.width = sourceCanvas.width;
+                modalMainCanvas.height = sourceCanvas.height;
+                destCtx.drawImage(sourceCanvas, 0, 0);
+            } else if (typeof sourceCanvas === 'string' || (sourceCanvas && sourceCanvas.tagName === 'IMG')) {
+                const imgUrl = typeof sourceCanvas === 'string' ? sourceCanvas : sourceCanvas.src;
+                const img = new Image();
+                img.onload = function() {
+                    modalMainCanvas.width = img.naturalWidth || 600;
+                    modalMainCanvas.height = img.naturalHeight || 600;
+                    destCtx.drawImage(img, 0, 0);
+                };
+                img.src = imgUrl;
+            }
         }
         if (modalMainCanvas && pdfPath) {
             modalMainCanvas.setAttribute('data-pdf-path', pdfPath);
@@ -1600,9 +1617,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         window.updatePrice();
         
-        productModalOverlay.classList.add('active');
-        productModal.classList.add('active');
-        window.lockBodyScroll();
+        if (productModalOverlay && productModal) {
+            productModalOverlay.classList.add('active');
+            productModal.classList.add('active');
+            window.lockBodyScroll();
+        }
     };
 
     productCards.forEach(card => {
@@ -1620,9 +1639,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    productModalOverlay.addEventListener('click', (e) => {
-        if (e.target === productModalOverlay) window.closeProductModal();
-    });
+    if (productModalOverlay) {
+        productModalOverlay.addEventListener('click', (e) => {
+            if (e.target === productModalOverlay) window.closeProductModal();
+        });
+    }
 });
 
 // --- TOAST NOTIFICATIONS ---
@@ -1822,4 +1843,182 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.body.appendChild(overlay);
     updateCartCount();
+    
+    // Initialize 3D Curved Cylinder Carousel if present
+    init3DCurvedCarousel();
 });
+
+// --- 3D CONCAVE CYLINDRICAL PRODUCT CAROUSEL ENGINE ---
+function init3DCurvedCarousel() {
+    const viewport = document.getElementById('cylinderCarouselViewport');
+    const track = document.getElementById('cylinderCarouselTrack');
+    if (!viewport || !track) return;
+
+    const cards = track.querySelectorAll('.cylinder-card');
+    const numCards = cards.length;
+    if (numCards === 0) return;
+
+    let currentRotation = 0;
+    let targetRotation = 0;
+    let velocity = 0;
+    const friction = 0.94;
+    const lerpFactor = 0.12;
+    const dragSensitivity = 0.16;
+    const idleSpeed = 0.03;
+
+    let isDragging = false;
+    let isHovered = false;
+    let startX = 0;
+    let startY = 0;
+    let lastX = 0;
+    let lastTime = 0;
+    let dragDistance = 0;
+    let radius = 850;
+    let cardWidth = 230;
+
+    // Card click handlers for opening product customization & inquiry modal
+    cards.forEach(card => {
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', (e) => {
+            if (dragDistance > 6) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
+            const title = card.querySelector('.cylinder-card-title')?.textContent.trim() || 'Product';
+            const subtitle = card.querySelector('.cylinder-card-subtitle')?.textContent.trim() || '';
+            const img = card.querySelector('img');
+            const imgSrc = img ? img.src : null;
+            
+            if (typeof window.openProductModal === 'function') {
+                window.openProductModal(title, subtitle, imgSrc, null);
+            }
+        });
+    });
+
+    function updateDimensions() {
+        const vw = window.innerWidth;
+        if (vw <= 576) {
+            radius = 460;
+            cardWidth = 160;
+        } else if (vw <= 992) {
+            radius = 650;
+            cardWidth = 190;
+        } else {
+            radius = 850;
+            cardWidth = 230;
+        }
+    }
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+
+    // Direct Concave Render Function
+    function renderConcave() {
+        const stepAngle = 360 / numCards; // 22.5 degrees per card (16 cards total)
+
+        cards.forEach((card, index) => {
+            const baseAngle = stepAngle * index;
+            const rawAngle = baseAngle + currentRotation;
+            // Normalize relative angle to [-180, 180]
+            const relAngle = ((rawAngle % 360) + 540) % 360 - 180;
+            const rad = relAngle * (Math.PI / 180);
+
+            // Concave cylindrical mathematics (Inward amphitheater arc):
+            // Center is X=0, Z=0. Sides recede in negative Z and rotate inward toward center
+            const X = radius * Math.sin(rad);
+            const Z = -radius * (1 - Math.cos(rad)) * 1.05;
+            const rotY = -relAngle * 0.85; // Inward facing tilt
+            const scale = Math.max(0.72, 1.0 - (1 - Math.cos(rad)) * 0.22);
+
+            // Smooth opacity falloff for seamless circular culling
+            const absAngle = Math.abs(relAngle);
+            let opacity = 1.0;
+            if (absAngle > 58) {
+                opacity = Math.max(0, 1.0 - (absAngle - 58) / 22);
+            }
+
+            const zIndex = Math.round(1000 * Math.cos(rad));
+
+            card.style.transform = `translate3d(${X.toFixed(1)}px, 0, ${Z.toFixed(1)}px) rotateY(${rotY.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+            card.style.zIndex = zIndex;
+            card.style.opacity = opacity.toFixed(3);
+            card.style.visibility = opacity > 0.01 ? 'visible' : 'hidden';
+        });
+    }
+
+    // Pointer Events (Mouse & Touch drag)
+    viewport.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        dragDistance = 0;
+        viewport.classList.add('is-dragging');
+        startX = e.clientX;
+        startY = e.clientY;
+        lastX = e.clientX;
+        lastTime = performance.now();
+        velocity = 0;
+    });
+
+    window.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const now = performance.now();
+        const deltaX = e.clientX - lastX;
+        const dt = Math.max(now - lastTime, 8);
+
+        dragDistance += Math.abs(deltaX);
+
+        targetRotation += deltaX * dragSensitivity;
+        velocity = (deltaX / dt) * 12;
+
+        lastX = e.clientX;
+        lastTime = now;
+    });
+
+    const stopDragging = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        viewport.classList.remove('is-dragging');
+        setTimeout(() => { dragDistance = 0; }, 50);
+    };
+
+    window.addEventListener('pointerup', stopDragging);
+    window.addEventListener('pointercancel', stopDragging);
+
+    // Mouse Wheel / Trackpad horizontal scroll support
+    viewport.addEventListener('wheel', (e) => {
+        const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY * 0.4;
+        if (Math.abs(delta) > 2) {
+            targetRotation -= delta * 0.12;
+            velocity = -delta * 0.06;
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    // Hover state to pause idle drift
+    viewport.addEventListener('mouseenter', () => { isHovered = true; });
+    viewport.addEventListener('mouseleave', () => { isHovered = false; });
+
+    // 60-120fps Animation Loop
+    function renderLoop() {
+        if (!isDragging) {
+            if (Math.abs(velocity) > 0.005) {
+                targetRotation += velocity;
+                velocity *= friction;
+            } else {
+                velocity = 0;
+                if (!isHovered) {
+                    targetRotation -= idleSpeed;
+                }
+            }
+        }
+
+        // Smooth Lerp
+        currentRotation += (targetRotation - currentRotation) * lerpFactor;
+
+        renderConcave();
+
+        requestAnimationFrame(renderLoop);
+    }
+
+    requestAnimationFrame(renderLoop);
+}
