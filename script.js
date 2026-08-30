@@ -1252,57 +1252,8 @@ let EXCHANGE_RATES = {
     PKR: { rate: 76.5, symbol: 'Rs. ', suffix: '' }
 };
 
-// Fetch real rates from backend
-async function fetchLiveRates() {
-    try {
-        const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
-            ? 'http://localhost:3000' 
-            : 'https://apex-print-hub-backend.vercel.app';
-            
-        const response = await fetch(`${API_BASE_URL}/api/currency/rates`);
-        const data = await response.json();
-        if (data.AED) EXCHANGE_RATES.AED.rate = data.AED;
-        if (data.SAR) EXCHANGE_RATES.SAR.rate = data.SAR;
-        if (data.PKR) EXCHANGE_RATES.PKR.rate = data.PKR;
-        
-        // Refresh prices if modal is open
-        if (typeof window.updatePrice === 'function') {
-            window.updatePrice();
-        }
-    } catch (e) {
-        console.error("Failed to fetch live rates, using fallbacks", e);
-    }
-}
-
-function detectCurrency() {
-    try {
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (tz.includes('Karachi') || tz.includes('Lahore')) return 'PKR';
-        if (tz.includes('Dubai') || tz.includes('Abu_Dhabi') || tz.includes('Muscat')) return 'AED';
-        if (tz.includes('Riyadh') || tz.includes('Jeddah') || tz.includes('Kuwait') || tz.includes('Qatar') || tz.includes('Bahrain')) return 'SAR';
-    } catch (e) {}
-    return 'AED';
-}
-
-window.getSelectedCurrency = function() {
-    let curr = localStorage.getItem('selected_currency');
-    if (!curr) {
-        curr = detectCurrency();
-        localStorage.setItem('selected_currency', curr);
-    }
-    return curr;
-};
-
-window.formatPrice = function(amountBase) {
-    const currency = window.getSelectedCurrency();
-    const data = EXCHANGE_RATES[currency] || EXCHANGE_RATES.AED;
-    const converted = amountBase * data.rate;
-    return `${data.symbol}${converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${data.suffix}`;
-};
-
+// Pure Inquiry / Quote Flow (No prices displayed)
 document.addEventListener('DOMContentLoaded', () => {
-    // Fetch live rates
-    fetchLiveRates();
 
     // Initialize Currency Selector
     const currencySelectors = document.querySelectorAll('#currencySelector');
