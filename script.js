@@ -2228,7 +2228,8 @@ window.openArtworkLightbox = async function(design) {
     }
 
     let activeUrl = design.url || '';
-    if (!activeUrl && design.id && window.ArtworkStore) {
+    // If activeUrl is empty or a data URI, retrieve original high-res binary from IndexedDB
+    if ((!activeUrl || activeUrl.startsWith('data:')) && design.id && window.ArtworkStore) {
         const rawFile = await window.ArtworkStore.get(design.id);
         if (rawFile) {
             currentLightboxObjectUrl = URL.createObjectURL(rawFile);
@@ -2249,9 +2250,9 @@ window.openArtworkLightbox = async function(design) {
     if (imgEl) imgEl.style.transform = 'scale(1)';
     if (zoomLevelEl) zoomLevelEl.textContent = '100%';
 
-    if (isImage && (design.previewUrl || activeUrl)) {
+    if (isImage && (activeUrl || design.previewUrl)) {
         if (imgEl) {
-            imgEl.src = design.previewUrl || activeUrl;
+            imgEl.src = activeUrl || design.previewUrl;
             imgEl.style.display = 'block';
         }
         if (docCardEl) docCardEl.style.display = 'none';
@@ -2266,19 +2267,24 @@ window.openArtworkLightbox = async function(design) {
         if (zoomControls) zoomControls.style.display = 'none';
     }
 
-    if (activeUrl) {
-        if (openExtBtn) {
+    const canOpenExternal = activeUrl && (activeUrl.startsWith('http://') || activeUrl.startsWith('https://') || activeUrl.startsWith('blob:'));
+    if (openExtBtn) {
+        if (canOpenExternal) {
             openExtBtn.href = activeUrl;
             openExtBtn.style.display = 'inline-flex';
+        } else {
+            openExtBtn.style.display = 'none';
         }
-        if (downloadBtn) {
+    }
+
+    if (downloadBtn) {
+        if (activeUrl) {
             downloadBtn.href = activeUrl;
             downloadBtn.download = design.name || 'artwork';
             downloadBtn.style.display = 'inline-flex';
+        } else {
+            downloadBtn.style.display = 'none';
         }
-    } else {
-        if (openExtBtn) openExtBtn.style.display = 'none';
-        if (downloadBtn) downloadBtn.style.display = 'none';
     }
 
     modal.style.display = 'flex';
@@ -2460,6 +2466,106 @@ window.checkoutCart = function() {
 };
 
 // ==========================================================================
+// CHECKOUT REVIEW PER-ITEM ARTWORK SWAP CONTROLLER
+// ==========================================================================
+window.triggerArtworkSwap = function(index) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,.pdf,.ai,.psd';
+    input.style.display = 'none';
+
+    input.onchange = async function(e) {
+        const file = e.target.files && e.target.files[0];
+        try {
+            if (input.parentNode) input.parentNode.removeChild(input);
+        } catch (domErr) {}
+
+        if (!file || !cart || !cart[index]) return;
+
+        if (file.size > 50 * 1024 * 1024) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('File size exceeds 50MB limit.', 'error');
+            }
+            return;
+        }
+
+        if (typeof window.showToast === 'function') {
+            window.showToast('Updating artwork...', 'info');
+        }
+
+        const artworkId = 'art_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+
+        // Remove previous artwork from store if present
+        if (cart[index].design && cart[index].design.id && window.ArtworkStore) {
+            try {
+                await window.ArtworkStore.remove(cart[index].design.id);
+            } catch (remErr) {
+                console.warn('Could not remove previous artwork from store:', remErr);
+            }
+        }
+
+        // Downsample visual thumbnail
+        let thumbUrl = '';
+        if (typeof window.createThumbnail === 'function') {
+            try {
+                thumbUrl = await window.createThumbnail(file);
+            } catch (thumbErr) {
+                console.warn('Failed to generate thumbnail for swapped artwork:', thumbErr);
+            }
+        }
+
+        // Save raw full-res binary in IndexedDB
+        if (window.ArtworkStore) {
+            try {
+                await window.ArtworkStore.save(artworkId, file);
+            } catch (storeErr) {
+                console.warn('Failed to save swapped artwork to IndexedDB:', storeErr);
+            }
+        }
+
+        // Direct client-side cloud upload to Supabase Storage if configured
+        let uploadResult = { url: '', storage: 'indexeddb' };
+        if (typeof window.uploadArtworkToSupabase === 'function') {
+            try {
+                uploadResult = await window.uploadArtworkToSupabase(file);
+            } catch (upErr) {
+                console.warn('Upload to Supabase failed during artwork swap:', upErr);
+            }
+        }
+
+        // Update cart item design payload
+        cart[index].design = {
+            id: artworkId,
+            name: file.name,
+            size: file.size,
+            type: file.type || 'application/octet-stream',
+            previewUrl: thumbUrl,
+            url: (uploadResult && uploadResult.url) || thumbUrl || '',
+            storage: (uploadResult && uploadResult.storage) || 'indexeddb'
+        };
+
+        saveCart();
+        if (typeof window.renderCheckoutOrderReview === 'function') {
+            window.renderCheckoutOrderReview();
+        }
+        if (typeof renderCartItems === 'function') {
+            renderCartItems();
+        }
+        if (typeof window.showToast === 'function') {
+            window.showToast(`Artwork updated to ${file.name}`, 'success');
+        }
+    };
+
+    document.body.appendChild(input);
+    input.click();
+    setTimeout(() => {
+        try {
+            if (input.parentNode) input.parentNode.removeChild(input);
+        } catch (e) {}
+    }, 60000);
+};
+
+// ==========================================================================
 // CHECKOUT ORDER REVIEW RENDERER (contact.html)
 // ==========================================================================
 window.renderCheckoutOrderReview = function() {
@@ -2545,8 +2651,13 @@ window.renderCheckoutOrderReview = function() {
                         <button type="button" onclick="removeFromCart(${index})" title="Remove item" style="background:none;border:none;color:#e74c3c;font-size:1.3rem;cursor:pointer;line-height:1;padding:0 4px;">&times;</button>
                     </div>
                     ${optionsHtml ? `<div class="checkout-item-options">${optionsHtml}</div>` : ''}
-                    <div ${item.design ? `onclick="window.openArtworkLightbox(cart[${index}].design)" style="cursor:pointer;" title="Click to view artwork in lightbox"` : ''}>
-                        ${artworkStatusHtml}
+                    <div class="checkout-item-actions">
+                        <div ${item.design ? `onclick="window.openArtworkLightbox(cart[${index}].design)" style="cursor:pointer;" title="Click to view artwork in lightbox"` : ''}>
+                            ${artworkStatusHtml}
+                        </div>
+                        <button type="button" class="btn-checkout-swap" onclick="window.triggerArtworkSwap(${index})" title="${item.design ? 'Change or replace artwork file' : 'Upload and attach artwork file'}">
+                            ${item.design ? 'Change Artwork' : '+ Attach Artwork'}
+                        </button>
                     </div>
                 </div>
             </div>`;
