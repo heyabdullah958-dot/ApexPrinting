@@ -365,25 +365,72 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Smooth scroll for hash navigation & deep links
+    // Smooth scroll for hash navigation, deep links & anchor clicks
+    function scrollToTargetElement(targetEl, updateHash) {
+        if (!targetEl) return;
+        const nav = document.getElementById('navbar');
+        const navHeight = nav ? nav.offsetHeight : 80;
+        const targetY = targetEl.getBoundingClientRect().top + window.pageYOffset - navHeight - 20;
+        window.scrollTo({
+            top: Math.max(0, targetY),
+            behavior: 'smooth'
+        });
+        if (updateHash && window.history && window.history.pushState) {
+            history.pushState(null, null, updateHash);
+        }
+    }
+
     function handleHashScroll(hash) {
         if (!hash) return;
         const targetId = decodeURIComponent(hash.replace(/^#/, ''));
         if (!targetId) return;
         const targetEl = document.getElementById(targetId) || (targetId === 'why-us' ? document.getElementById('why-apex') : null);
         if (targetEl) {
-            targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            scrollToTargetElement(targetEl);
         }
     }
+
+    // Delegated click listener for in-page anchors (ensures clicks ALWAYS scroll even if hash is already active)
+    document.addEventListener('click', (e) => {
+        const anchor = e.target.closest('a[href*="#"]');
+        if (!anchor) return;
+        const hrefAttr = anchor.getAttribute('href');
+        if (!hrefAttr || hrefAttr === '#' || hrefAttr.startsWith('javascript:')) return;
+
+        let hash = '';
+        if (hrefAttr.startsWith('#')) {
+            hash = hrefAttr;
+        } else {
+            try {
+                const targetUrl = new URL(anchor.href, window.location.href);
+                const currentPath = window.location.pathname.replace(/\/index\.html$/, '/');
+                const targetPath = targetUrl.pathname.replace(/\/index\.html$/, '/');
+                if (targetUrl.origin === window.location.origin && targetPath === currentPath) {
+                    hash = targetUrl.hash;
+                }
+            } catch (err) {}
+        }
+
+        if (!hash) return;
+
+        const targetId = decodeURIComponent(hash.replace(/^#/, ''));
+        const targetEl = document.getElementById(targetId) || (targetId === 'why-us' ? document.getElementById('why-apex') : null);
+
+        if (targetEl) {
+            e.preventDefault();
+            closeMobileMenu();
+            scrollToTargetElement(targetEl, hash);
+        }
+    });
 
     window.addEventListener('hashchange', () => {
         handleHashScroll(window.location.hash);
     });
 
     if (window.location.hash) {
-        setTimeout(() => {
-            handleHashScroll(window.location.hash);
-        }, 250);
+        handleHashScroll(window.location.hash);
+        setTimeout(() => handleHashScroll(window.location.hash), 150);
+        setTimeout(() => handleHashScroll(window.location.hash), 400);
     }
 
     // ESC Key listener to dismiss navigation or modals
