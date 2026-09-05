@@ -88,6 +88,8 @@ async function sendEmail({ to, subject, html, preheader, attachments, from, repl
 
 // 1. Notify Owner / Admin about New Order Inquiry or Contact
 async function notifyOwnerNewContact(data) {
+  const files = data.files || (data.file ? [data.file] : []);
+
   const html = `
     <h2 style="color: #FFFFFF; font-size: 20px; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #2a2a2a; padding-bottom: 12px;">
       🔔 New Order Inquiry Received
@@ -105,7 +107,16 @@ async function notifyOwnerNewContact(data) {
       <h3 style="color: #C9A84C; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Order / Project Specifications:</h3>
       <div style="white-space: pre-wrap; background-color: #1a1a1a; padding: 15px; border-left: 3px solid #C9A84C; border-radius: 0 4px 4px 0; font-family: monospace; font-size: 13px; color: #E0E0E0; line-height: 1.5;">${data.message}</div>
     </div>
-    ${data.file ? `<p style="font-size: 13px; color: #888888;">📎 <strong>Attached Artwork:</strong> ${data.file.originalname}</p>` : ''}
+    ${files.length > 0 ? `
+    <div style="background-color: #1a1a1a; border: 1px solid #2e2e2e; border-radius: 6px; padding: 14px; margin-bottom: 20px;">
+      <h4 style="margin: 0 0 10px 0; color: #C9A84C; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">
+        📎 Attached Artwork & Files (${files.length}):
+      </h4>
+      <ul style="margin: 0; padding-left: 20px; color: #CCCCCC; font-size: 13px; line-height: 1.6;">
+        ${files.map(f => `<li><strong style="color: #FFFFFF;">${f.originalname}</strong> <span style="color: #888888;">(${(f.size / 1024).toFixed(0)} KB)</span></li>`).join('')}
+      </ul>
+    </div>
+    ` : ''}
   `;
 
   const mailOptions = {
@@ -117,11 +128,11 @@ async function notifyOwnerNewContact(data) {
     html
   };
 
-  if (data.file) {
-    mailOptions.attachments = [{
-      filename: data.file.originalname,
-      path: data.file.path
-    }];
+  if (files.length > 0) {
+    mailOptions.attachments = files.map(f => ({
+      filename: f.originalname,
+      path: f.path
+    }));
   }
 
   return sendEmail(mailOptions);
@@ -129,6 +140,8 @@ async function notifyOwnerNewContact(data) {
 
 // 2. Customer Confirmation for Order Request or Contact
 async function confirmCustomerContact(data) {
+  const files = data.files || (data.file ? [data.file] : []);
+
   const html = `
     <h2 style="color: #FFFFFF; font-size: 20px; margin-top: 0; margin-bottom: 12px;">
       Thank You For Your Order Request
@@ -145,7 +158,13 @@ async function confirmCustomerContact(data) {
         <tr><td style="padding: 5px 0; color: #888888;"><strong>Contact Email:</strong></td><td style="padding: 5px 0; color: #FFFFFF;">${data.email}</td></tr>
         ${data.phone ? `<tr><td style="padding: 5px 0; color: #888888;"><strong>Contact Phone:</strong></td><td style="padding: 5px 0; color: #FFFFFF;">${data.phone}</td></tr>` : ''}
         ${data.country ? `<tr><td style="padding: 5px 0; color: #888888;"><strong>Region / Country:</strong></td><td style="padding: 5px 0; color: #FFFFFF;">${data.country}</td></tr>` : ''}
-        ${data.file ? `<tr><td style="padding: 5px 0; color: #888888;"><strong>Attached Artwork:</strong></td><td style="padding: 5px 0; color: #C9A84C;">${data.file.originalname}</td></tr>` : ''}
+        ${files.length > 0 ? `
+        <tr>
+          <td width="30%" style="padding: 5px 0; color: #888888; vertical-align: top;"><strong>Attached Artwork:</strong></td>
+          <td style="padding: 5px 0; color: #C9A84C;">
+            ${files.map(f => `<div>✓ ${f.originalname} <span style="color: #888888; font-size: 12px;">(${(f.size / 1024).toFixed(0)} KB)</span></div>`).join('')}
+          </td>
+        </tr>` : ''}
       </table>
     </div>
 

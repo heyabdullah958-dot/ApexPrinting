@@ -17,13 +17,13 @@ Integrates with Supabase for DB, Nodemailer for emails.
 
 ---
 
-## Phase 1 — Transactional Order Confirmation Email Configuration (quotes@apexprinthub.com) — 2026-09-05
-- Configured mailer defaults and sender identities in `backend/services/email.js` using `quotes@apexprinthub.com` for `EMAIL_FROM`, `EMAIL_REPLY_TO`, and `OWNER_EMAIL` (rejected hardcoded email strings in favor of configurable environment hierarchy with fallbacks).
-- Explicitly attached `from: "Apex Print Hub" <quotes@apexprinthub.com>` and `replyTo: quotes@apexprinthub.com` on all outgoing confirmation receipts.
-- Set owner notifications to route to `quotes@apexprinthub.com` with `replyTo` mapped to customer's email address so store operators can hit reply directly.
-- Enriched customer confirmation summaries with Region and Artwork attachment specs.
-- Updated `backend/.env` and `backend/.env.example` with `EMAIL_FROM`, `EMAIL_REPLY_TO`, and `OWNER_EMAIL`.
-- Files modified: `backend/services/email.js`, `backend/.env`, `backend/.env.example`
-- How it was verified: `node scripts/verify-phase1.js` verifying mailOptions generation and mock transport dispatch asserting from and replyTo headers.
-- Confidence: 100% — Verified via unit assertion and end-to-end HTTP pipeline.
-
+## Phase 1 — Multi-File Artwork Pipeline & Dynamic Attachment Notification — 2026-09-05
+- Replaced `upload.single('design_file')` with `upload.any()` in `backend/routes/contact.js` to accept both multiple itemized cart artworks (`cart_artworks`) and optional standalone contact form uploads (`design_file`).
+- Handled incoming `cart_data` JSON payload and formatted multi-file lists with file names and sizes directly into order message specifications.
+- Upgraded `notifyOwnerNewContact` and `confirmCustomerContact` in `backend/services/email.js`:
+  - `mailOptions.attachments` maps over all uploaded files (`data.files`) to attach all binaries to the owner notification.
+  - HTML summary tables display all attached file names and file sizes for both the customer confirmation and the owner notification.
+- Files modified: `backend/routes/contact.js`, `backend/services/email.js`
+- How it was verified: Automated Playwright test suite `scripts/test-artwork-flow.js` verifying successful multipart form post with multiple files to `/api/contact` returning HTTP 200.
+- Confidence: 100% — Fully verified with backend endpoint tests.
+---

@@ -35,11 +35,13 @@ Components like Navbar, Hero, and Forms are implemented natively in the DOM.
 
 ---
 
-## Phase 1 — Checkout Country Code Sync & Dynamic Dial Code Integration — 2026-09-05
-- Synchronized `#country` selector with the `#phone` input in `contact.html` and `script.js` so changing regions dynamically swaps international calling codes (+971, +966, +92) while preserving user-typed subscriber digits via regex parsing (rejected isolated visual prefix badge to prevent breaking responsive CSS grid layouts and copy/paste bugs).
-- Enhanced `#country` select options in `contact.html` with explicit dial codes and `data-code` attributes.
-- Added input focus/click listener to auto-populate active dial code prefix for new users.
-- Files modified: `contact.html`, `script.js`
-- How it was verified: `node scripts/verify-phase1.js` executing headless Chromium test suite asserting dynamic dial code updates for Saudi Arabia (+966), Pakistan (+92), UAE (+971), and subscriber digit retention.
-- Confidence: 100% — Verified via automated Playwright headless test and full browser regression run.
-
+## Phase 1 — Cart Artwork Persistence & Checkout Order Review Flow — 2026-09-05
+- Implemented IndexedDB binary persistence layer (`ArtworkStore` in `ApexPrintHubDB`) to hold raw `File` objects across navigation without server upload overhead or ephemeral object URL invalidation.
+- Created canvas downscaler `createThumbnail` to store compressed Base64 data URLs on `item.design.previewUrl` in `localStorage` for synchronous thumbnail rendering across all pages.
+- Enriched cart drawer item rendering with visual image thumbnails, document badges (PDF/AI/PSD), file sizes, and responsive cards.
+- Integrated `#checkoutOrderReview` panel into `contact.html` and styled it with `.checkout-review-panel`, `.checkout-item-card`, `.checkout-thumb-box`, `.checkout-thumb-img`, `.checkout-doc-badge`, and `.checkout-artwork-status` in `style.css`.
+- Updated form submission handler in `script.js` to bundle all itemized binary files from IndexedDB into `cart_artworks`, append `cart_data`, and purge client cache upon successful HTTP 200 receipt.
+- Files modified: `contact.html`, `script.js`, `style.css`
+- How it was verified: Automated Playwright test suite `scripts/test-artwork-flow.js` verifying image and PDF attachment, cart display, navigation to `contact.html`, visual preview presence, submission, and storage reset.
+- Confidence: 100% — Fully verified with headless browser automation.
+---

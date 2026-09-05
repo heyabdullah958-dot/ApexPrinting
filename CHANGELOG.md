@@ -67,7 +67,23 @@ Initial tracking of project changes.
   - Updated environment templates in `backend/.env` and `backend/.env.example`.
 - **Verification**:
   - Created automated Playwright verification suite (`scripts/verify-phase1.js`) validating country code swapping across UAE, Saudi Arabia, Pakistan, and digit retention.
-  - Verified full Nodemailer options payload generation and customer/owner email dispatch.
-  - Verified 100% pass across existing browser regression suite (`scripts/test-browser.js`).
+## Phase 1 — Cart Artwork Persistence & Checkout Design Flow Fix — 2026-09-05
+- **Client-Side Artwork Engine & Storage Architecture**:
+  - Implemented zero-dependency IndexedDB persistence layer (`ArtworkStore` in `ApexPrintHubDB`, store `artworks`) to store raw binary `File` objects across document navigation without server upload round-trips.
+  - Added HTML5 Canvas downsampling engine (`createThumbnail`) that converts uploaded raster graphics into ultra-lightweight (~1KB) Base64 data URLs stored on `item.design.previewUrl` in `localStorage` without risking `QuotaExceededError`.
+  - Added document badge fallback for vector and document artwork types (PDF, AI, PSD, EPS) displaying file extension and formatted byte size.
+- **Drawer & Checkout Order Review UI**:
+  - Upgraded cart drawer rendering in `script.js` to showcase high-res thumbnail previews or document badges for each custom item.
+  - Designed and implemented luxury dark theme Order Request Review panel (`#checkoutOrderReview`) on `contact.html` rendering itemized cards, specifications, visual thumbnail previews, and deletion controls.
+  - Dynamically adjusted file upload copy on `contact.html` to "Upload Additional Artwork / Master Files (Optional)" and added confirmation badge reminding customers that attached cart artwork will be bundled automatically.
+  - Linked item removal in checkout review directly to IndexedDB deletion (`ArtworkStore.remove()`) and reactive DOM re-render.
+- **Backend & Transactional Email Multi-File Pipeline**:
+  - Updated `backend/routes/contact.js` from `upload.single('design_file')` to `upload.any()` with `multer`, collecting both `cart_artworks` multi-file attachments and optional single contact uploads.
+  - Structured itemized specification summaries and parsed `cart_data` JSON payload.
+  - Upgraded `notifyOwnerNewContact` and `confirmCustomerContact` in `backend/services/email.js` to attach all files in `mailOptions.attachments` and display an itemized list of attached artwork files with sizes in email templates.
+- **Verification & Testing**:
+  - Created automated Playwright verification suite (`scripts/test-artwork-flow.js`) that tests multi-item configuration, PNG thumbnail generation, PDF badge rendering, navigation to `contact.html`, visual preview persistence, form submission, and storage cleanup (IndexedDB & `localStorage` reset).
+  - 100% test pass verified.
+---
 
 

@@ -14,10 +14,15 @@ Initial tracking of project bugs and fixes.
 
 ---
 
-## Phase 1 — Dynamic Phone Dial Code Lock on Checkout/Contact Form — 2026-09-05
-- **Symptom**: Selecting a country other than the UAE default (e.g. Pakistan or Saudi Arabia) on the order inquiry/checkout form left the phone dial code locked to +971.
-- **Root Cause**: The country select `#country` and phone input `#phone` elements were decoupled in the DOM with no change/input event listeners binding their states.
-- **Fix**: Implemented reactive country change listeners in `script.js` mapping `UAE` (+971), `SAR` (+966), `PKR` (+92), and `Other` (+). Used regex extraction to dynamically swap international calling codes while preserving user-typed subscriber digits. Added focus listener to pre-fill active dial codes for empty inputs.
-- **Verification**: Verified using automated Playwright test suite `scripts/verify-phase1.js` demonstrating instant switching to +966 for Saudi Arabia, +92 for Pakistan, and +971 for UAE with digit retention.
-- **Confidence**: 100% — Fully verified with headless browser automation.
-
+## Phase 1 — Cart Artwork Persistence Loss and Missing Checkout Design Flow — 2026-09-05
+- **Symptom**: Attached artwork files and previews in the cart disappeared when users navigated from `services.html` to `contact.html` via "Submit Order Request". The checkout/contact page did not display any of the uploaded designs or itemized configurations, and multiple files could not be submitted together.
+- **Root Cause**: Product modal file uploads were creating ephemeral `URL.createObjectURL(file)` instances that were garbage-collected upon document navigation. Furthermore, `contact.html` lacked an order review component and its form only accepted a single file input (`upload.single('design_file')`).
+- **Fix**:
+  1. Built an IndexedDB persistence engine (`ApexPrintHubDB`, store `artworks`) that preserves raw binary `File` objects across page navigations and sessions without memory limits.
+  2. Implemented HTML5 canvas downsampling to generate ultra-lightweight Base64 thumbnail data URLs stored on `item.design.previewUrl` in `localStorage` for instant synchronous rendering.
+  3. Added an itemized `#checkoutOrderReview` panel to `contact.html` with image thumbnails, document badges (PDF/AI/PSD), option badges, and delete buttons.
+  4. Updated `contactForm` submission to bundle all IndexedDB binary files under `cart_artworks` alongside `cart_data` and any standalone file.
+  5. Updated backend route to `upload.any()` and Nodemailer services to attach all files and list them in email summaries.
+- **Verification**: Verified via Playwright automated test suite `scripts/test-artwork-flow.js` covering multi-file upload, cart drawer rendering, navigation to `contact.html`, visual preview persistence, multipart form post, and cache purging.
+- **Confidence**: 100% — Fully verified with automated browser testing.
+---

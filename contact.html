@@ -102,6 +102,9 @@
                 
                 <!-- Contact Form -->
                 <div class="reveal-right form-card">
+                    <!-- Dynamic Cart & Artwork Order Review Panel -->
+                    <div id="checkoutOrderReview" style="display: none;"></div>
+
                     <form id="contactForm" style="display: flex; flex-direction: column; gap: 1.5rem;">
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
@@ -153,13 +156,14 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="message" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Project Details</label>
+                            <label for="message" id="messageLabel" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Project Details</label>
                             <textarea id="message" name="message" class="form-control" rows="5" required placeholder="Tell us about your project — quantity, size, special requirements..."></textarea>
                         </div>
 
-                        <div class="form-group">
-                            <label for="design_file" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Upload Artwork / Design (Optional)</label>
+                        <div class="form-group" id="designFileUploadGroup">
+                            <label for="design_file" id="designFileLabel" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Upload Artwork / Design (Optional)</label>
                             <input type="file" id="design_file" name="design_file" class="form-control" accept="image/*,.pdf,.ai,.psd">
+                            <div id="designFileHint" style="display: none; margin-top: 0.5rem; font-size: 0.8rem; color: #2ecc71;"></div>
                         </div>
 
                         <div id="formError" style="display:none; background: rgba(220,53,69,0.1); border: 1px solid rgba(220,53,69,0.3); color: #ff6b6b; padding: 0.8rem 1rem; border-radius: 6px; font-size: 0.9rem;"></div>

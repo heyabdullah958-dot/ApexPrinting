@@ -1,3 +1,162 @@
+// ==========================================================================
+// APEX PRINT HUB - INDEXEDDB ARTWORK STORE & PERSISTENCE ENGINE
+// ==========================================================================
+const ArtworkStore = {
+    dbName: 'ApexPrintHubDB',
+    storeName: 'artworks',
+    version: 1,
+    dbPromise: null,
+
+    getDB() {
+        if (this.dbPromise) return this.dbPromise;
+        this.dbPromise = new Promise((resolve) => {
+            if (typeof window === 'undefined' || !window.indexedDB) {
+                console.warn('IndexedDB not available in current environment');
+                resolve(null);
+                return;
+            }
+            try {
+                const req = window.indexedDB.open(this.dbName, this.version);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(this.storeName)) {
+                        db.createObjectStore(this.storeName, { keyPath: 'id' });
+                    }
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => {
+                    console.error('IndexedDB open error:', req.error);
+                    resolve(null);
+                };
+            } catch (err) {
+                console.error('IndexedDB exception during open:', err);
+                resolve(null);
+            }
+        });
+        return this.dbPromise;
+    },
+
+    async save(id, file) {
+        try {
+            const db = await this.getDB();
+            if (!db) return false;
+            return new Promise((resolve) => {
+                const tx = db.transaction(this.storeName, 'readwrite');
+                const store = tx.objectStore(this.storeName);
+                store.put({ id, file, name: file.name, type: file.type, size: file.size, updatedAt: Date.now() });
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => {
+                    console.error('ArtworkStore.save error:', tx.error);
+                    resolve(false);
+                };
+            });
+        } catch (e) {
+            console.error('ArtworkStore.save exception:', e);
+            return false;
+        }
+    },
+
+    async get(id) {
+        try {
+            const db = await this.getDB();
+            if (!db) return null;
+            return new Promise((resolve) => {
+                const tx = db.transaction(this.storeName, 'readonly');
+                const store = tx.objectStore(this.storeName);
+                const req = store.get(id);
+                req.onsuccess = () => resolve(req.result ? req.result.file : null);
+                req.onerror = () => resolve(null);
+            });
+        } catch (e) {
+            console.error('ArtworkStore.get exception:', e);
+            return null;
+        }
+    },
+
+    async remove(id) {
+        try {
+            const db = await this.getDB();
+            if (!db) return false;
+            return new Promise((resolve) => {
+                const tx = db.transaction(this.storeName, 'readwrite');
+                const store = tx.objectStore(this.storeName);
+                store.delete(id);
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+            });
+        } catch (e) {
+            return false;
+        }
+    },
+
+    async clear() {
+        try {
+            const db = await this.getDB();
+            if (!db) return false;
+            return new Promise((resolve) => {
+                const tx = db.transaction(this.storeName, 'readwrite');
+                const store = tx.objectStore(this.storeName);
+                store.clear();
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+            });
+        } catch (e) {
+            return false;
+        }
+    }
+};
+window.ArtworkStore = ArtworkStore;
+
+async function createThumbnail(file) {
+    if (!file || !file.type || !file.type.startsWith('image/')) {
+        return null;
+    }
+    return new Promise((resolve) => {
+        try {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        const maxDim = 160;
+                        let width = img.width || 100;
+                        let height = img.height || 100;
+                        if (width > height) {
+                            if (width > maxDim) {
+                                height = Math.round((height * maxDim) / width);
+                                width = maxDim;
+                            }
+                        } else {
+                            if (height > maxDim) {
+                                width = Math.round((width * maxDim) / height);
+                                height = maxDim;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+                        resolve(dataUrl);
+                    } catch (canvasErr) {
+                        console.warn('Canvas thumbnail error:', canvasErr);
+                        resolve(null);
+                    }
+                };
+                img.onerror = () => resolve(null);
+                img.src = e.target.result;
+            };
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(file);
+        } catch (readErr) {
+            console.warn('createThumbnail exception:', readErr);
+            resolve(null);
+        }
+    });
+}
+window.createThumbnail = createThumbnail;
+
 document.addEventListener('DOMContentLoaded', () => {
     
     // Define backend URL based on environment
@@ -361,6 +520,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append('design_file', designFile);
                 }
 
+                // Append itemized cart data and binary artworks from IndexedDB
+                if (typeof cart !== 'undefined' && cart.length > 0) {
+                    formData.append('cart_data', JSON.stringify(cart));
+                    for (let i = 0; i < cart.length; i++) {
+                        const item = cart[i];
+                        if (item.design && item.design.id && window.ArtworkStore) {
+                            try {
+                                const rawFile = await window.ArtworkStore.get(item.design.id);
+                                if (rawFile) {
+                                    formData.append('cart_artworks', rawFile, rawFile.name || item.design.name);
+                                }
+                            } catch (storeErr) {
+                                console.warn('Could not read artwork from IndexedDB for item:', item.title, storeErr);
+                            }
+                        }
+                    }
+                }
+
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/contact`, {
                         method: 'POST',
@@ -372,6 +549,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!response.ok || !data.success) {
                         throw new Error(data.message || 'Error submitting order request');
                     }
+
+                    // Reset cart and purge IndexedDB upon successful order request submission
+                    if (typeof cart !== 'undefined') {
+                        cart = [];
+                        if (typeof saveCart === 'function') saveCart();
+                    }
+                    if (window.ArtworkStore) {
+                        try {
+                            await window.ArtworkStore.clear();
+                        } catch (purgeErr) {
+                            console.warn('Could not clear ArtworkStore:', purgeErr);
+                        }
+                    }
+                    const reviewEl = document.getElementById('checkoutOrderReview');
+                    if (reviewEl) reviewEl.style.display = 'none';
 
                     contactForm.style.display = 'none';
                     if (formSuccess) {
@@ -1555,43 +1747,27 @@ document.addEventListener('DOMContentLoaded', () => {
                             return;
                         }
 
+                        const artworkId = 'art_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+                        let thumbUrl = null;
                         try {
-                            const formData = new FormData();
-                            formData.append('design_file', file);
-                            
-                            const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
-                                ? 'http://localhost:3000' 
-                                : (window.location.origin.includes('vercel.app') ? window.location.origin : 'https://apex-printing.vercel.app');
-
-                            const controller = new AbortController();
-                            const timeoutId = setTimeout(() => controller.abort(), 4000);
-
-                            const uploadRes = await fetch(`${API_BASE_URL}/api/upload`, {
-                                method: 'POST',
-                                body: formData,
-                                signal: controller.signal
-                            });
-                            clearTimeout(timeoutId);
-                            
-                            if (uploadRes.ok) {
-                                const uploadData = await uploadRes.json();
-                                if (uploadData.success) {
-                                    uploadedDesign = {
-                                        url: `${API_BASE_URL}${uploadData.filePath}`,
-                                        name: uploadData.fileName
-                                    };
-                                }
+                            if (window.ArtworkStore) {
+                                await window.ArtworkStore.save(artworkId, file);
                             }
-                        } catch (uploadErr) {
-                            console.warn('Upload API unreachable, using local file object URL:', uploadErr);
+                            if (typeof window.createThumbnail === 'function') {
+                                thumbUrl = await window.createThumbnail(file);
+                            }
+                        } catch (storeErr) {
+                            console.warn('Error storing artwork locally:', storeErr);
                         }
 
-                        if (!uploadedDesign) {
-                            uploadedDesign = {
-                                url: URL.createObjectURL(file),
-                                name: file.name
-                            };
-                        }
+                        uploadedDesign = {
+                            id: artworkId,
+                            name: file.name,
+                            size: file.size,
+                            type: file.type || 'application/octet-stream',
+                            previewUrl: thumbUrl,
+                            url: thumbUrl || ''
+                        };
                     }
 
                     if (typeof window.addToCart === 'function') {
@@ -1768,7 +1944,7 @@ function renderCartItems() {
     if (!cartContainer) return;
     
     cartContainer.innerHTML = '';
-    if (cart.length === 0) {
+    if (!cart || cart.length === 0) {
         cartContainer.innerHTML = '<p style="color:var(--gray);text-align:center;padding:2rem;">Your cart is empty.</p>';
         if (checkoutBtn) checkoutBtn.style.display = 'none';
         return;
@@ -1786,13 +1962,29 @@ function renderCartItems() {
         itemEl.style.position = 'relative';
         
         let detailsHtml = '';
-        if (item.options) {
+        if (item.options && item.options.length > 0) {
             item.options.forEach(opt => {
                 detailsHtml += `<div style="font-size:0.85rem;color:var(--gray);"><strong style="color:var(--white-soft);">${opt.label}:</strong> ${opt.value}</div>`;
             });
         }
         if (item.design) {
-            detailsHtml += `<div style="font-size:0.85rem;color:var(--gold);margin-top:0.5rem;"><strong style="color:var(--white-soft);">Artwork:</strong> <a href="${item.design.url}" target="_blank" style="color:var(--gold);text-decoration:underline;">${item.design.name}</a></div>`;
+            const isImg = item.design.previewUrl && (item.design.type ? item.design.type.startsWith('image/') : true);
+            const sizeStr = item.design.size ? ` (${(item.design.size / 1024).toFixed(0)} KB)` : '';
+            const badgeText = item.design.name ? (item.design.name.split('.').pop() || 'DOC').toUpperCase() : 'DOC';
+
+            detailsHtml += `
+            <div style="display:flex;align-items:center;gap:10px;margin-top:0.6rem;padding:6px 10px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.18);border-radius:6px;">
+                <div style="width:38px;height:38px;border-radius:4px;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(201,168,76,0.3);">
+                    ${isImg 
+                        ? `<img src="${item.design.previewUrl}" alt="Artwork" style="width:100%;height:100%;object-fit:cover;display:block;">`
+                        : `<span style="font-size:0.65rem;font-weight:700;color:var(--gold);letter-spacing:1px;">${badgeText}</span>`
+                    }
+                </div>
+                <div style="flex:1;min-width:0;font-size:0.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    <div style="color:var(--white-soft);font-weight:600;overflow:hidden;text-overflow:ellipsis;" title="${item.design.name}">${item.design.name}</div>
+                    <div style="color:var(--gray);font-size:0.75rem;">Attached Design${sizeStr}</div>
+                </div>
+            </div>`;
         }
         
         itemEl.innerHTML = `
@@ -1810,44 +2002,215 @@ function renderCartItems() {
 }
 
 window.removeFromCart = function(index) {
+    const removed = cart[index];
+    if (removed && removed.design && removed.design.id && window.ArtworkStore) {
+        window.ArtworkStore.remove(removed.design.id);
+    }
     cart.splice(index, 1);
     saveCart();
     renderCartItems();
+    if (typeof window.renderCheckoutOrderReview === 'function') {
+        window.renderCheckoutOrderReview();
+    }
 };
 
 window.updateQuantity = function(index, change) {
     if (cart[index]) {
         cart[index].quantity = (cart[index].quantity || 1) + change;
         if (cart[index].quantity <= 0) {
+            const removed = cart[index];
+            if (removed && removed.design && removed.design.id && window.ArtworkStore) {
+                window.ArtworkStore.remove(removed.design.id);
+            }
             cart.splice(index, 1);
         }
         saveCart();
         renderCartItems();
+        if (typeof window.renderCheckoutOrderReview === 'function') {
+            window.renderCheckoutOrderReview();
+        }
     }
 };
 
 window.checkoutCart = function() {
-    if (cart.length === 0) return;
+    if (!cart || cart.length === 0) return;
     let details = 'Hello, I would like to place an order request for the following items:\n\n';
     
     cart.forEach((item, i) => {
         const qty = item.quantity || 1;
         details += `--- ITEM ${i+1}: ${qty}x ${item.title} ---\n`;
-        if (item.options) {
+        if (item.options && item.options.length > 0) {
             item.options.forEach(opt => {
                 details += `- ${opt.label}: ${opt.value}\n`;
             });
         }
         if (item.design) {
-            details += `- Uploaded Artwork: ${item.design.name} (${item.design.url})\n`;
+            details += `- Attached Artwork: ${item.design.name}\n`;
         }
         details += '\n';
     });
     
     details += 'Please review my specifications and contact me with the final quote and proof.';
     
-    const targetUrl = `contact.html?service=Custom%20Order&details=${encodeURIComponent(details)}`;
+    const targetUrl = `contact.html?service=Custom%20Order&checkout=1&details=${encodeURIComponent(details)}`;
     window.location.href = targetUrl;
+};
+
+// ==========================================================================
+// CHECKOUT ORDER REVIEW RENDERER (contact.html)
+// ==========================================================================
+window.renderCheckoutOrderReview = function() {
+    const reviewContainer = document.getElementById('checkoutOrderReview');
+    if (!reviewContainer) return;
+    
+    if (!cart || cart.length === 0) {
+        reviewContainer.style.display = 'none';
+        reviewContainer.innerHTML = '';
+        
+        const designFileLabel = document.getElementById('designFileLabel');
+        if (designFileLabel) designFileLabel.textContent = 'Upload Artwork / Design (Optional)';
+        const designFileHint = document.getElementById('designFileHint');
+        if (designFileHint) designFileHint.style.display = 'none';
+        return;
+    }
+    
+    const totalCount = cart.reduce((sum, it) => sum + (it.quantity || 1), 0);
+    const hasAnyArtwork = cart.some(it => it.design && it.design.name);
+
+    let itemsHtml = '';
+    cart.forEach((item, index) => {
+        const qty = item.quantity || 1;
+        const isImg = item.design && item.design.previewUrl && (item.design.type ? item.design.type.startsWith('image/') : true);
+        const badgeExt = (item.design && item.design.name) ? (item.design.name.split('.').pop() || 'DOC').toUpperCase() : 'DOC';
+        const sizeStr = (item.design && item.design.size) ? ` (${(item.design.size / 1024).toFixed(0)} KB)` : '';
+        
+        let thumbHtml = '';
+        if (item.design) {
+            if (isImg) {
+                thumbHtml = `<img src="${item.design.previewUrl}" alt="${item.design.name}" class="checkout-thumb-img">`;
+            } else {
+                thumbHtml = `
+                    <div class="checkout-doc-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <span>${badgeExt}</span>
+                    </div>`;
+            }
+        } else {
+            thumbHtml = `
+                <div class="checkout-doc-badge" style="background:rgba(255,255,255,0.03);color:var(--gray);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    <span>NO FILE</span>
+                </div>`;
+        }
+
+        let optionsHtml = '';
+        if (item.options && item.options.length > 0) {
+            optionsHtml = item.options.map(opt => `<span class="checkout-item-opt-tag"><strong>${opt.label}:</strong> ${opt.value}</span>`).join('');
+        }
+
+        let artworkStatusHtml = '';
+        if (item.design) {
+            artworkStatusHtml = `
+                <div class="checkout-artwork-status">
+                    <span>✓</span> Attached Artwork: <strong>${item.design.name}</strong>${sizeStr}
+                </div>`;
+        } else {
+            artworkStatusHtml = `
+                <div class="checkout-artwork-status none">
+                    <span>•</span> No custom artwork attached
+                </div>`;
+        }
+
+        itemsHtml += `
+            <div class="checkout-item-card">
+                <div class="checkout-thumb-box" title="${item.design ? item.design.name : 'No artwork attached'}">
+                    ${thumbHtml}
+                </div>
+                <div class="checkout-item-info">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                        <div class="checkout-item-title">${qty > 1 ? qty + 'x ' : ''}${item.title}</div>
+                        <button type="button" onclick="removeFromCart(${index})" title="Remove item" style="background:none;border:none;color:#e74c3c;font-size:1.3rem;cursor:pointer;line-height:1;padding:0 4px;">&times;</button>
+                    </div>
+                    ${optionsHtml ? `<div class="checkout-item-options">${optionsHtml}</div>` : ''}
+                    ${artworkStatusHtml}
+                </div>
+            </div>`;
+    });
+
+    reviewContainer.innerHTML = `
+        <div class="checkout-review-panel">
+            <div class="checkout-review-header">
+                <div>
+                    <span style="font-size:0.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);">Order Request Summary</span>
+                    <h3 class="checkout-review-title">Selected Items (${totalCount})</h3>
+                </div>
+                <a href="services.html" style="font-size:0.85rem;color:var(--gold);text-decoration:none;display:inline-flex;align-items:center;gap:4px;border:1px solid rgba(201,168,76,0.3);padding:0.35rem 0.8rem;border-radius:4px;transition:0.2s ease;">
+                    <span>+ Add More</span>
+                </a>
+            </div>
+            <div class="checkout-items-list">
+                ${itemsHtml}
+            </div>
+        </div>`;
+    
+    reviewContainer.style.display = 'block';
+
+    // Adjust upload section copy
+    const designFileLabel = document.getElementById('designFileLabel');
+    if (designFileLabel) {
+        designFileLabel.textContent = 'Upload Additional Artwork / Master Files (Optional)';
+    }
+    const designFileHint = document.getElementById('designFileHint');
+    if (designFileHint) {
+        if (hasAnyArtwork) {
+            designFileHint.textContent = '✓ Attached item artwork listed above will be bundled automatically with your order request.';
+            designFileHint.style.display = 'block';
+        } else {
+            designFileHint.style.display = 'none';
+        }
+    }
+
+    // Auto-select service as Custom Order if empty
+    const serviceSelect = document.getElementById('service');
+    if (serviceSelect && (!serviceSelect.value || serviceSelect.value === 'General Inquiry')) {
+        for (let i = 0; i < serviceSelect.options.length; i++) {
+            if (serviceSelect.options[i].value.toLowerCase().includes('custom') || serviceSelect.options[i].textContent.toLowerCase().includes('custom')) {
+                serviceSelect.selectedIndex = i;
+                break;
+            }
+        }
+    }
+
+    // Pre-fill message specifications if empty
+    const messageTextarea = document.getElementById('message');
+    if (messageTextarea && !messageTextarea.value.trim()) {
+        let details = 'Hello, I would like to place an order request for the following items:\n\n';
+        cart.forEach((item, i) => {
+            const qty = item.quantity || 1;
+            details += `--- ITEM ${i+1}: ${qty}x ${item.title} ---\n`;
+            if (item.options && item.options.length > 0) {
+                item.options.forEach(opt => {
+                    details += `- ${opt.label}: ${opt.value}\n`;
+                });
+            }
+            if (item.design) {
+                details += `- Attached Artwork: ${item.design.name}\n`;
+            }
+            details += '\n';
+        });
+        details += 'Please review my specifications and contact me with the final quote and proof.';
+        messageTextarea.value = details;
+    }
 };
 
 // Create Cart HTML structure on load
@@ -1871,6 +2234,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.body.appendChild(overlay);
     updateCartCount();
+    
+    // Render Checkout Order Review if container exists (contact.html)
+    if (typeof window.renderCheckoutOrderReview === 'function') {
+        window.renderCheckoutOrderReview();
+    }
     
     // Initialize 3D Curved Cylinder Carousel if present
     init3DCurvedCarousel();
