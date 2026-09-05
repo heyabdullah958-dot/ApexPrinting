@@ -69,3 +69,26 @@ Components like Navbar, Hero, and Forms are implemented natively in the DOM.
 - Confidence: 100% — Fully verified in headless Chromium.
 ---
 
+## Phase 1 — Luxury Dark/Gold Process (#process) & Why Apex (#why-apex) Sections — 2026-09-06
+- Implemented bespoke luxury dark/gold Process Section (`#process`) outlining the 4-step atelier workflow:
+  - Step 01: Choose Your Product (Catalog discovery, custom specifications, 300+ GSM stocks).
+  - Step 02: Upload Your Design (Pre-press file audit, vector safety zones, Pantone channels).
+  - Step 03: Approve & Pay (Millimeter-accurate digital soft proofing and instant checkout).
+  - Step 04: Fast Delivery (Priority dispatch, white-glove packaging, tracked transit).
+  - Features: Metallic gold step indicators, frosted glass cards (`rgba(22, 22, 22, 0.85)`), connecting gold desktop line, custom SVG iconography with WCAG `aria-hidden="true"` attributes, gold gradient display typography accents, and bottom custom consultation CTA banner.
+- Implemented elevated Why Apex Section (`#why-apex`):
+  - 4 Core Pillars: Vibrant Color Accuracy (ISO 12647-2, $\Delta E < 1.5$), Fast Turnaround (24–48H rush), Premium Materials (300 to 450+ GSM), Quality Guaranteed (100% reprint guarantee).
+  - Restored `opacity 0.8s var(--ease-out)` to `.pillar-card` transition to preserve smooth scroll reveal fade-in across all 4 pillar cards.
+  - Integrated Artisan Pressroom Craft Showcase featuring `why_apex_craft.png`, animated spinning gold quality guarantee seal (`.why-spin-seal`), and 3 workshop tolerance metrics.
+  - Added OS-level `@media (prefers-reduced-motion: reduce)` override disabling `.why-spin-seal` rotation.
+- Synchronized navigation:
+  - Updated navbar and footer links on `index.html`, `services.html`, and `contact.html` to `#process` / `index.html#process` and `#why-apex` / `index.html#why-apex`.
+  - Added anchor alias `#why-us` for full backwards compatibility.
+  - Implemented `scroll-margin-top: calc(var(--nav-h) + 24px)` ensuring clean viewport alignment beneath the sticky navbar.
+  - Added `handleHashScroll` in `script.js` for hash navigation and deep links.
+- Verified: Automated Playwright test suite `scripts/verify-process-why-apex.js` (11 full stages passed: desktop nav smooth scroll, direct hash navigation, mobile hamburger drawer real scroll alignment, tablet reflow, 280px/320px zero horizontal overflow, prefers-reduced-motion enforcement, typography gold gradients, and footer links).
+- Files modified: `index.html`, `services.html`, `contact.html`, `style.css`, `script.js`.
+- Confidence: 100% — Authoritatively verified across headless Chromium, all breakpoints, and automated interaction checks.
+---
+
+

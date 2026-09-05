@@ -19,7 +19,7 @@
                 <li><a href="index.html" class="nav-link active">Home</a></li>
                 <li><a href="services.html" class="nav-link">Products</a></li>
                 <li><a href="#process" class="nav-link">Process</a></li>
-                <li><a href="#why-us" class="nav-link">Why Apex</a></li>
+                <li><a href="#why-apex" class="nav-link">Why Apex</a></li>
                 <li><a href="contact.html" class="nav-link">Contact</a></li>
                 <li><a href="contact.html" class="btn btn-primary" style="margin-left: 1rem; padding: 0.75rem 1.5rem;">Get a Quote</a></li>
                 <li><button class="btn btn-outline" style="margin-left: 0.5rem; padding: 0.75rem 1.5rem;" onclick="window.openCartModal()">Cart <span id="cartCount">(0)</span></button></li>
@@ -297,54 +297,280 @@
         </div>
     </section>
 
-    <!-- Why Choose Us -->
-    <section class="why-section">
+    <!-- Process Section (#process) -->
+    <section class="process-section" id="process">
         <div class="container">
-            <div class="why-layout">
-                <div class="why-image-panel reveal-left">
-                    <div class="why-img-frame">
-                        <img src="why_apex_craft.png" alt="Artisan Craftsmanship - High-end Commercial Printing Press in Action">
+            <div class="section-header reveal">
+                <span class="section-eyebrow">How It Works</span>
+                <h2 class="section-title">Simple. Fast. <span class="serif">Perfect.</span></h2>
+                <div class="gold-line"></div>
+                <p class="section-subtitle">From order to delivery in four effortless steps &mdash; engineered for uncompromising print precision, meticulous pre-press review, and white-glove arrival.</p>
+            </div>
+
+            <div class="process-track-wrapper reveal">
+                <div class="process-track-line"></div>
+                <div class="process-grid">
+                    <!-- Step 01 -->
+                    <div class="process-card">
+                        <div class="process-card-glow"></div>
+                        <div class="process-header">
+                            <div class="process-num-badge">01</div>
+                            <div class="process-icon-wrap">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+                        <span class="process-phase-label">Step 01 &bull; Discovery</span>
+                        <h3 class="process-title">Choose Your Product</h3>
+                        <p class="process-desc">Browse our catalog and select the product and specifications that fit your needs &mdash; from 300+ GSM luxury cardstocks to custom die-cut foils and corporate packaging.</p>
+                        <div class="process-tags">
+                            <span class="process-tag">16+ Categories</span>
+                            <span class="process-tag">Custom Specs</span>
+                        </div>
                     </div>
-                    <div class="badge-float" style="position: absolute; bottom: -20px; right: -20px; background: var(--gold); color: var(--black); width: 140px; height: 140px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center; font-family: var(--font-display); font-size: 1.5rem; letter-spacing: 1px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: spin-slow 15s linear infinite; border: 4px solid var(--black-mid);">
-                        PREMIUM<br>QUALITY<br>GUARANTEED
+
+                    <!-- Step 02 -->
+                    <div class="process-card">
+                        <div class="process-card-glow"></div>
+                        <div class="process-header">
+                            <div class="process-num-badge">02</div>
+                            <div class="process-icon-wrap">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                                    <path d="M2 2l7.586 7.586"></path>
+                                    <circle cx="11" cy="11" r="2"></circle>
+                                </svg>
+                            </div>
+                        </div>
+                        <span class="process-phase-label">Step 02 &bull; Pre-Press</span>
+                        <h3 class="process-title">Upload Your Design</h3>
+                        <p class="process-desc">Submit your artwork or work with our design team to create something extraordinary. Our prepress team inspects bleed, safety zones, and spot Pantone channels.</p>
+                        <div class="process-tags">
+                            <span class="process-tag">PDF / AI / PSD</span>
+                            <span class="process-tag">Pre-Press Audit</span>
+                        </div>
+                    </div>
+
+                    <!-- Step 03 -->
+                    <div class="process-card">
+                        <div class="process-card-glow"></div>
+                        <div class="process-header">
+                            <div class="process-num-badge">03</div>
+                            <div class="process-icon-wrap">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                    <polyline points="9 12 11 14 15 10"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+                        <span class="process-phase-label">Step 03 &bull; Validation</span>
+                        <h3 class="process-title">Approve & Pay</h3>
+                        <p class="process-desc">Review your digital proof, approve it, and complete your secure payment in minutes. Receive millimeter-accurate previews before a single drop of ink is applied.</p>
+                        <div class="process-tags">
+                            <span class="process-tag">Digital Proof</span>
+                            <span class="process-tag">Instant Sign-Off</span>
+                        </div>
+                    </div>
+
+                    <!-- Step 04 -->
+                    <div class="process-card">
+                        <div class="process-card-glow"></div>
+                        <div class="process-header">
+                            <div class="process-num-badge">04</div>
+                            <div class="process-icon-wrap">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                </svg>
+                            </div>
+                        </div>
+                        <span class="process-phase-label">Step 04 &bull; Fulfillment</span>
+                        <h3 class="process-title">Fast Delivery</h3>
+                        <p class="process-desc">Your premium prints are produced and shipped directly to your door on time, encased in custom rigid protective packaging with full priority shipment tracking.</p>
+                        <div class="process-tags">
+                            <span class="process-tag">Express Transit</span>
+                            <span class="process-tag">White-Glove Pack</span>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="why-content reveal-right">
-                    <span class="section-eyebrow">The Apex Advantage</span>
-                    <h2 class="section-title">Why Partner <span class="serif">With Us</span></h2>
-                    <div class="gold-line left"></div>
-                    <p style="color: var(--gray); font-size: 1.1rem; margin-bottom: 3rem; line-height: 1.8;">We combine state-of-the-art printing technology with artisan craftsmanship to deliver products that truly represent the quality of your brand. When precision matters, Apex delivers.</p>
-                    
-                    <ul style="display: flex; flex-direction: column; gap: 1.5rem;">
-                        <li style="display: flex; align-items: flex-start; gap: 1.2rem;">
-                            <div style="width: 40px; height: 40px; background: rgba(201,168,76,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--gold);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+
+            <div class="process-footer-cta reveal">
+                <div class="process-cta-box">
+                    <div class="process-cta-text">
+                        <h4>Need custom consultation or bespoke architectural prints?</h4>
+                        <p>Our master lithographers and prepress directors are available for tailored paper swatching and file audits.</p>
+                    </div>
+                    <div class="process-cta-actions">
+                        <a href="services.html" class="btn btn-primary">Explore Products</a>
+                        <a href="contact.html" class="btn btn-outline">Request Custom Quote</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Apex Section (#why-apex) -->
+    <section class="why-apex-section" id="why-apex">
+        <span id="why-us" class="anchor-alias"></span>
+        <div class="container">
+            <div class="section-header reveal">
+                <span class="section-eyebrow">Why Choose Us</span>
+                <h2 class="section-title">The Apex <span class="serif">Difference</span></h2>
+                <div class="gold-line"></div>
+                <p class="section-subtitle">Professional print solutions crafted with meticulous attention to quality, color accuracy, and on-time delivery.</p>
+            </div>
+
+            <!-- 4 Core Pillars Grid -->
+            <div class="why-pillars-grid">
+                <!-- Pillar 1: Vibrant Color Accuracy -->
+                <div class="pillar-card reveal">
+                    <div class="pillar-card-glow"></div>
+                    <div class="pillar-icon-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
+                            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
+                            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
+                            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path>
+                        </svg>
+                        <div class="pillar-icon-ring"></div>
+                    </div>
+                    <span class="pillar-metric-tag">&Delta;E &lt; 1.5 Calibration</span>
+                    <h3 class="pillar-title">Vibrant Color Accuracy</h3>
+                    <p class="pillar-desc">State-of-the-art CMYK and Pantone printing ensures your brand colors are reproduced exactly as intended across all coated and uncoated stocks.</p>
+                    <div class="pillar-feature-list">
+                        <div class="pillar-feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>ISO 12647-2 Spectrophotometer Proofing</span>
+                        </div>
+                        <div class="pillar-feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>CMYK & Custom Spot Pantone Matching</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pillar 2: Fast Turnaround -->
+                <div class="pillar-card reveal">
+                    <div class="pillar-card-glow"></div>
+                    <div class="pillar-icon-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                        </svg>
+                        <div class="pillar-icon-ring"></div>
+                    </div>
+                    <span class="pillar-metric-tag">24&ndash;48H Rush Ready</span>
+                    <h3 class="pillar-title">Fast Turnaround</h3>
+                    <p class="pillar-desc">Rush orders and standard timelines &mdash; we deliver on schedule without compromising on quality, backed by agile press shifts and priority shipping.</p>
+                    <div class="pillar-feature-list">
+                        <div class="pillar-feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>Guaranteed Event & Launch Deadlines</span>
+                        </div>
+                        <div class="pillar-feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>Live Production Status & Tracking</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pillar 3: Premium Materials -->
+                <div class="pillar-card reveal">
+                    <div class="pillar-card-glow"></div>
+                    <div class="pillar-icon-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M6 3h12l4 6-10 13L2 9z"></path>
+                            <path d="M11 3 8 9l4 13 4-13-3-6"></path>
+                            <path d="M2 9h20"></path>
+                        </svg>
+                        <div class="pillar-icon-ring"></div>
+                    </div>
+                    <span class="pillar-metric-tag">300 to 450+ GSM Stocks</span>
+                    <h3 class="pillar-title">Premium Materials</h3>
+                    <p class="pillar-desc">From 300 GSM luxury cardstock to 450+ GSM specialty paper &mdash; only the finest certified archival papers, cotton boards, and tactile foils make the cut.</p>
+                    <div class="pillar-feature-list">
+                        <div class="pillar-feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>FSC-Certified Sustainable Substrates</span>
+                        </div>
+                        <div class="pillar-feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>Velvet Soft-Touch & Hot Metallic Foil</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pillar 4: Quality Guaranteed -->
+                <div class="pillar-card reveal">
+                    <div class="pillar-card-glow"></div>
+                    <div class="pillar-icon-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <circle cx="12" cy="11" r="3"></circle>
+                        </svg>
+                        <div class="pillar-icon-ring"></div>
+                    </div>
+                    <span class="pillar-metric-tag">100% Free Reprint Pledge</span>
+                    <h3 class="pillar-title">Quality Guaranteed</h3>
+                    <p class="pillar-desc">Every order undergoes rigorous quality inspection. Not satisfied? We reprint at no extra cost &mdash; backed by our comprehensive artisan guarantee.</p>
+                    <div class="pillar-feature-list">
+                        <div class="pillar-feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>Multi-Point Manual Press Inspection</span>
+                        </div>
+                        <div class="pillar-feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>100% Client Satisfaction Promise</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Artisan Pressroom Craft Showcase Panel -->
+            <div class="why-showcase-panel">
+                <div class="why-showcase-grid">
+                    <div class="why-showcase-media reveal-left">
+                        <div class="why-showcase-img-wrap">
+                            <img src="why_apex_craft.png" alt="Artisan Craftsmanship - High-end Commercial Printing Press in Action" loading="lazy">
+                            <div class="why-showcase-media-overlay"></div>
+                        </div>
+                        <div class="badge-float why-spin-seal">
+                            PREMIUM <br> QUALITY <br> GUARANTEED
+                        </div>
+                    </div>
+                    <div class="why-showcase-content reveal-right">
+                        <span class="section-eyebrow">Artisan Precision</span>
+                        <h3 class="why-showcase-title">Where Industrial Capacity Meets <span class="serif">Bespoke Mastery</span></h3>
+                        <p class="why-showcase-desc">Behind every Apex commission is a synthesis of precision digital press machinery and seasoned lithographic craftsmen who obsess over registration, ink saturation, and tactile finishing perfection.</p>
+                        
+                        <div class="why-stats-row">
+                            <div class="why-stat-box">
+                                <span class="why-stat-value">0.01<span class="why-stat-unit">mm</span></span>
+                                <span class="why-stat-label">Cut & Register Tolerance</span>
                             </div>
-                            <div>
-                                <h4 style="font-family: var(--font-label); font-size: 0.9rem; letter-spacing: 1px; margin-bottom: 0.25rem;">High-Quality Offset & Digital</h4>
-                                <p style="color: var(--gray); font-size: 0.9rem;">Industry-leading machinery ensuring crisp, vibrant colors on every run.</p>
+                            <div class="why-stat-box">
+                                <span class="why-stat-value">99.8<span class="why-stat-unit">%</span></span>
+                                <span class="why-stat-label">On-Schedule Delivery</span>
                             </div>
-                        </li>
-                        <li style="display: flex; align-items: flex-start; gap: 1.2rem;">
-                            <div style="width: 40px; height: 40px; background: rgba(201,168,76,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--gold);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            <div class="why-stat-box">
+                                <span class="why-stat-value">450<span class="why-stat-unit">+ GSM</span></span>
+                                <span class="why-stat-label">Luxury Board Capacity</span>
                             </div>
-                            <div>
-                                <h4 style="font-family: var(--font-label); font-size: 0.9rem; letter-spacing: 1px; margin-bottom: 0.25rem;">Rapid Turnaround Times</h4>
-                                <p style="color: var(--gray); font-size: 0.9rem;">Optimized workflows mean your critical materials are ready when you need them.</p>
-                            </div>
-                        </li>
-                        <li style="display: flex; align-items: flex-start; gap: 1.2rem;">
-                            <div style="width: 40px; height: 40px; background: rgba(201,168,76,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--gold);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                            </div>
-                            <div>
-                                <h4 style="font-family: var(--font-label); font-size: 0.9rem; letter-spacing: 1px; margin-bottom: 0.25rem;">Custom Design Assistance</h4>
-                                <p style="color: var(--gray); font-size: 0.9rem;">Our in-house pre-press team ensures your files are perfectly optimized for print.</p>
-                            </div>
-                        </li>
-                    </ul>
+                        </div>
+
+                        <div class="why-showcase-actions">
+                            <a href="contact.html" class="btn btn-primary">Start Your Project</a>
+                            <a href="services.html" class="btn btn-outline">Explore Materials</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -396,6 +622,8 @@
                     <ul style="display: flex; flex-direction: column; gap: 0.75rem;">
                         <li><a href="index.html" style="color: var(--gray); font-size: 0.95rem;">Home</a></li>
                         <li><a href="services.html" style="color: var(--gray); font-size: 0.95rem;">Products</a></li>
+                        <li><a href="#process" style="color: var(--gray); font-size: 0.95rem;">Process</a></li>
+                        <li><a href="#why-apex" style="color: var(--gray); font-size: 0.95rem;">Why Apex</a></li>
                         <li><a href="contact.html" style="color: var(--gray); font-size: 0.95rem;">Contact Us</a></li>
                         <li><a href="contact.html" style="color: var(--gray); font-size: 0.95rem;">Request Quote</a></li>
                     </ul>

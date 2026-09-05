@@ -365,6 +365,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Smooth scroll for hash navigation & deep links
+    function handleHashScroll(hash) {
+        if (!hash) return;
+        const targetId = decodeURIComponent(hash.replace(/^#/, ''));
+        if (!targetId) return;
+        const targetEl = document.getElementById(targetId) || (targetId === 'why-us' ? document.getElementById('why-apex') : null);
+        if (targetEl) {
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    window.addEventListener('hashchange', () => {
+        handleHashScroll(window.location.hash);
+    });
+
+    if (window.location.hash) {
+        setTimeout(() => {
+            handleHashScroll(window.location.hash);
+        }, 250);
+    }
+
     // ESC Key listener to dismiss navigation or modals
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
