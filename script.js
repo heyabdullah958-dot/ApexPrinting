@@ -2188,6 +2188,156 @@ window.closeCartModal = function() {
     }
 };
 
+// ==========================================================================
+// LUXURY IN-APP ARTWORK LIGHTBOX MODAL CONTROLLER
+// ==========================================================================
+let currentLightboxObjectUrl = null;
+let currentLightboxZoom = 1;
+
+window.openArtworkLightbox = async function(design) {
+    const modal = document.getElementById('artworkLightboxModal');
+    if (!modal || !design) return;
+
+    const titleEl = document.getElementById('lightboxTitle');
+    const badgeEl = document.getElementById('lightboxBadge');
+    const imgEl = document.getElementById('lightboxImg');
+    const docCardEl = document.getElementById('lightboxDocCard');
+    const docExtEl = document.getElementById('lightboxDocExt');
+    const specsEl = document.getElementById('lightboxSpecs');
+    const openExtBtn = document.getElementById('lightboxOpenExternalBtn');
+    const downloadBtn = document.getElementById('lightboxDownloadBtn');
+    const zoomControls = document.getElementById('lightboxZoomControls');
+    const zoomLevelEl = document.getElementById('lightboxZoomLevel');
+
+    const fileName = design.name || 'Artwork Preview';
+    if (titleEl) {
+        titleEl.textContent = fileName;
+        titleEl.title = fileName;
+    }
+    const ext = design.name ? (design.name.split('.').pop() || 'FILE').toUpperCase() : 'FILE';
+    if (badgeEl) badgeEl.textContent = ext;
+
+    const sizeStr = design.size ? `${(design.size / (1024 * 1024)).toFixed(2)} MB` : 'Unknown size';
+    const isCloud = !!(design.url && !design.url.startsWith('data:') && !design.url.startsWith('blob:') && (design.storage === 'supabase' || design.url.includes('http')));
+    const storageLabel = isCloud ? 'Cloud Stored (Supabase CDN)' : 'Local Storage';
+    if (specsEl) specsEl.textContent = `Format: ${ext} • Size: ${sizeStr} • Storage: ${storageLabel}`;
+
+    if (currentLightboxObjectUrl) {
+        URL.revokeObjectURL(currentLightboxObjectUrl);
+        currentLightboxObjectUrl = null;
+    }
+
+    let activeUrl = design.url || '';
+    if (!activeUrl && design.id && window.ArtworkStore) {
+        const rawFile = await window.ArtworkStore.get(design.id);
+        if (rawFile) {
+            currentLightboxObjectUrl = URL.createObjectURL(rawFile);
+            activeUrl = currentLightboxObjectUrl;
+        }
+    }
+    if (!activeUrl && design.previewUrl) {
+        activeUrl = design.previewUrl;
+    }
+
+    const imageExtensions = ['PNG', 'JPG', 'JPEG', 'WEBP', 'SVG', 'GIF', 'BMP', 'ICO'];
+    const isImage = (design.type && design.type.startsWith('image/')) || 
+                    imageExtensions.includes(ext) || 
+                    (design.previewUrl && !design.previewUrl.startsWith('data:application'));
+
+    // Reset zoom state
+    currentLightboxZoom = 1;
+    if (imgEl) imgEl.style.transform = 'scale(1)';
+    if (zoomLevelEl) zoomLevelEl.textContent = '100%';
+
+    if (isImage && (design.previewUrl || activeUrl)) {
+        if (imgEl) {
+            imgEl.src = design.previewUrl || activeUrl;
+            imgEl.style.display = 'block';
+        }
+        if (docCardEl) docCardEl.style.display = 'none';
+        if (zoomControls) zoomControls.style.display = 'flex';
+    } else {
+        if (imgEl) {
+            imgEl.style.display = 'none';
+            imgEl.src = '';
+        }
+        if (docCardEl) docCardEl.style.display = 'flex';
+        if (docExtEl) docExtEl.textContent = ext;
+        if (zoomControls) zoomControls.style.display = 'none';
+    }
+
+    if (activeUrl) {
+        if (openExtBtn) {
+            openExtBtn.href = activeUrl;
+            openExtBtn.style.display = 'inline-flex';
+        }
+        if (downloadBtn) {
+            downloadBtn.href = activeUrl;
+            downloadBtn.download = design.name || 'artwork';
+            downloadBtn.style.display = 'inline-flex';
+        }
+    } else {
+        if (openExtBtn) openExtBtn.style.display = 'none';
+        if (downloadBtn) downloadBtn.style.display = 'none';
+    }
+
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+};
+
+window.closeArtworkLightbox = function() {
+    const modal = document.getElementById('artworkLightboxModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+    const imgEl = document.getElementById('lightboxImg');
+    if (imgEl) {
+        imgEl.src = '';
+        imgEl.style.transform = 'scale(1)';
+    }
+    currentLightboxZoom = 1;
+    if (currentLightboxObjectUrl) {
+        URL.revokeObjectURL(currentLightboxObjectUrl);
+        currentLightboxObjectUrl = null;
+    }
+};
+
+window.zoomArtworkLightbox = function(delta) {
+    currentLightboxZoom = Math.min(Math.max(0.5, currentLightboxZoom + delta), 3.0);
+    const img = document.getElementById('lightboxImg');
+    const zoomLevelEl = document.getElementById('lightboxZoomLevel');
+    if (img) {
+        img.style.transform = `scale(${currentLightboxZoom})`;
+    }
+    if (zoomLevelEl) {
+        zoomLevelEl.textContent = `${Math.round(currentLightboxZoom * 100)}%`;
+    }
+};
+
+window.resetArtworkLightboxZoom = function() {
+    currentLightboxZoom = 1;
+    const img = document.getElementById('lightboxImg');
+    const zoomLevelEl = document.getElementById('lightboxZoomLevel');
+    if (img) {
+        img.style.transform = 'scale(1)';
+    }
+    if (zoomLevelEl) {
+        zoomLevelEl.textContent = '100%';
+    }
+};
+
+if (typeof document !== 'undefined') {
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('artworkLightboxModal');
+            if (modal && modal.style.display === 'flex') {
+                window.closeArtworkLightbox();
+            }
+        }
+    });
+}
+
 function renderCartItems() {
     const cartContainer = document.getElementById('cartItemsList');
     const checkoutBtn = document.getElementById('cartCheckoutBtn');
@@ -2223,7 +2373,7 @@ function renderCartItems() {
             const badgeText = item.design.name ? (item.design.name.split('.').pop() || 'DOC').toUpperCase() : 'DOC';
 
             detailsHtml += `
-            <div style="display:flex;align-items:center;gap:10px;margin-top:0.6rem;padding:6px 10px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.18);border-radius:6px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-top:0.6rem;padding:6px 10px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.18);border-radius:6px;cursor:pointer;transition:all 0.2s ease;" onclick="window.openArtworkLightbox(cart[${index}].design)" title="Click to view artwork in lightbox" onmouseover="this.style.background='rgba(201,168,76,0.14)'" onmouseout="this.style.background='rgba(201,168,76,0.06)'">
                 <div style="width:38px;height:38px;border-radius:4px;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(201,168,76,0.3);">
                     ${isImg 
                         ? `<img src="${item.design.previewUrl}" alt="Artwork" style="width:100%;height:100%;object-fit:cover;display:block;">`
@@ -2232,7 +2382,10 @@ function renderCartItems() {
                 </div>
                 <div style="flex:1;min-width:0;font-size:0.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                     <div style="color:var(--white-soft);font-weight:600;overflow:hidden;text-overflow:ellipsis;" title="${item.design.name}">${item.design.name}</div>
-                    <div style="color:var(--gray);font-size:0.75rem;">Attached Design${sizeStr}</div>
+                    <div style="color:var(--gray);font-size:0.75rem;display:flex;align-items:center;gap:5px;">
+                        Attached Design${sizeStr}
+                        <span style="color:var(--gold);font-size:0.72rem;">• View 🔍</span>
+                    </div>
                 </div>
             </div>`;
         }
@@ -2383,7 +2536,7 @@ window.renderCheckoutOrderReview = function() {
 
         itemsHtml += `
             <div class="checkout-item-card">
-                <div class="checkout-thumb-box" title="${item.design ? item.design.name : 'No artwork attached'}">
+                <div class="checkout-thumb-box" title="${item.design ? 'Click to view artwork: ' + item.design.name : 'No artwork attached'}" ${item.design ? `onclick="window.openArtworkLightbox(cart[${index}].design)" style="cursor:pointer;"` : ''}>
                     ${thumbHtml}
                 </div>
                 <div class="checkout-item-info">
@@ -2392,7 +2545,9 @@ window.renderCheckoutOrderReview = function() {
                         <button type="button" onclick="removeFromCart(${index})" title="Remove item" style="background:none;border:none;color:#e74c3c;font-size:1.3rem;cursor:pointer;line-height:1;padding:0 4px;">&times;</button>
                     </div>
                     ${optionsHtml ? `<div class="checkout-item-options">${optionsHtml}</div>` : ''}
-                    ${artworkStatusHtml}
+                    <div ${item.design ? `onclick="window.openArtworkLightbox(cart[${index}].design)" style="cursor:pointer;" title="Click to view artwork in lightbox"` : ''}>
+                        ${artworkStatusHtml}
+                    </div>
                 </div>
             </div>`;
     });

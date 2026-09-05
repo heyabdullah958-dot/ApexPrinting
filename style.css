@@ -2507,3 +2507,214 @@ select.form-control option {
 .artwork-upload-status.complete {
   color: #2ecc71;
 }
+
+/* ==========================================================================
+   LUXURY IN-APP ARTWORK LIGHTBOX MODAL
+   ========================================================================== */
+.artwork-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 5, 5, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: fadeIn 0.25s ease;
+}
+.artwork-lightbox-dialog {
+  background: #141414;
+  border: 1px solid rgba(201, 168, 76, 0.35);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 680px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+}
+.artwork-lightbox-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.artwork-lightbox-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.artwork-lightbox-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--gold);
+  background: rgba(201, 168, 76, 0.12);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  align-self: flex-start;
+}
+.artwork-lightbox-title {
+  font-family: var(--font-serif);
+  color: var(--white);
+  font-size: 1.1rem;
+  margin: 0.2rem 0 0 0;
+  max-width: 380px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.artwork-lightbox-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  margin-right: 1rem;
+}
+.btn-lightbox-zoom {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--white);
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+.btn-lightbox-zoom:hover {
+  background: rgba(201, 168, 76, 0.2);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.artwork-lightbox-close {
+  background: none;
+  border: none;
+  color: var(--gray);
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s;
+  padding: 0.2rem;
+}
+.artwork-lightbox-close:hover {
+  color: #e74c3c;
+}
+.artwork-lightbox-body {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a0a;
+  min-height: 320px;
+  max-height: 60vh;
+  overflow: auto;
+}
+.artwork-lightbox-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.artwork-lightbox-media img {
+  max-width: 100%;
+  max-height: 52vh;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+  transform-origin: center center;
+  transition: transform 0.15s ease;
+}
+.artwork-lightbox-doc-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: var(--gold);
+  padding: 2rem;
+}
+.artwork-lightbox-doc-card svg {
+  width: 64px;
+  height: 64px;
+  stroke: var(--gold);
+}
+.artwork-lightbox-doc-card span {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+.artwork-lightbox-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+.artwork-lightbox-specs {
+  font-size: 0.82rem;
+  color: var(--gray);
+}
+.artwork-lightbox-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+.btn-lightbox-secondary {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--white);
+  padding: 0.4rem 0.85rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.82rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+.btn-lightbox-secondary:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.btn-lightbox-primary {
+  background: var(--gold);
+  color: #000;
+  padding: 0.4rem 0.85rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.82rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+.btn-lightbox-primary:hover {
+  background: #d4af37;
+  transform: translateY(-1px);
+}
+@media (max-width: 576px) {
+  .artwork-lightbox-dialog {
+    max-width: 95vw;
+  }
+  .artwork-lightbox-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .artwork-lightbox-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .artwork-lightbox-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

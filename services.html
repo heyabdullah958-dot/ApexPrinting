@@ -613,5 +613,45 @@
     })();
     </script>
 
+    <!-- Luxury In-App Artwork Lightbox Modal -->
+    <div id="artworkLightboxModal" class="artwork-lightbox-backdrop" style="display:none;" onclick="if(event.target===this) window.closeArtworkLightbox();">
+        <div class="artwork-lightbox-dialog">
+            <div class="artwork-lightbox-header">
+                <div class="artwork-lightbox-meta">
+                    <span class="artwork-lightbox-badge" id="lightboxBadge">IMAGE</span>
+                    <h4 class="artwork-lightbox-title" id="lightboxTitle">Artwork Preview</h4>
+                </div>
+                <div class="artwork-lightbox-zoom-controls" id="lightboxZoomControls" style="display:flex;align-items:center;gap:0.4rem;margin-left:auto;margin-right:1rem;">
+                    <button type="button" class="btn-lightbox-zoom" onclick="window.zoomArtworkLightbox(-0.25)" title="Zoom Out">−</button>
+                    <span id="lightboxZoomLevel" style="font-size:0.75rem;color:var(--gray);min-width:42px;text-align:center;">100%</span>
+                    <button type="button" class="btn-lightbox-zoom" onclick="window.zoomArtworkLightbox(0.25)" title="Zoom In">+</button>
+                    <button type="button" class="btn-lightbox-zoom" onclick="window.resetArtworkLightboxZoom()" title="Reset Zoom">⟲</button>
+                </div>
+                <button class="artwork-lightbox-close" type="button" onclick="window.closeArtworkLightbox()" title="Close">&times;</button>
+            </div>
+            <div class="artwork-lightbox-body" id="lightboxBody">
+                <div class="artwork-lightbox-media" id="lightboxMediaContainer">
+                    <img id="lightboxImg" src="" alt="Artwork Preview" style="display:none;">
+                    <div id="lightboxDocCard" style="display:none;" class="artwork-lightbox-doc-card">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                        <span id="lightboxDocExt">PDF</span>
+                    </div>
+                </div>
+            </div>
+            <div class="artwork-lightbox-footer">
+                <div class="artwork-lightbox-specs" id="lightboxSpecs">Size: 1.2 MB</div>
+                <div class="artwork-lightbox-actions">
+                    <a id="lightboxOpenExternalBtn" href="#" target="_blank" class="btn-lightbox-secondary">Open Full File ↗</a>
+                    <a id="lightboxDownloadBtn" href="#" download class="btn-lightbox-primary">Download File ⬇</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
