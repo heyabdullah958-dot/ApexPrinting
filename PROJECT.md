@@ -5,6 +5,7 @@
 Project Name: Apex Print Hub
 Frontend Stack: Vanilla HTML, CSS, JS
 Backend Stack: Node.js, Express (v4.18.2), Supabase (v2.39.0)
-Live URL: http://localhost:8000 (dev) / https://apex-printing.vercel.app (production)
+Live URL: http://localhost:8000 (dev) / https://apex-printing-seven.vercel.app (production)
 
 ---
+
