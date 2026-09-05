@@ -157,6 +157,118 @@ async function createThumbnail(file) {
 }
 window.createThumbnail = createThumbnail;
 
+// Direct Client Supabase Storage Upload Helper with Progress
+window.uploadArtworkToSupabase = async function(file, onProgress) {
+    if (!file) {
+        return {
+            success: false,
+            storage: 'indexeddb',
+            url: '',
+            name: '',
+            size: 0,
+            type: ''
+        };
+    }
+
+    const SUPABASE_URL = (typeof window !== 'undefined' && window.SUPABASE_URL) ? window.SUPABASE_URL : 'https://placeholder.supabase.co';
+    const SUPABASE_ANON_KEY = (typeof window !== 'undefined' && window.SUPABASE_ANON_KEY) ? window.SUPABASE_ANON_KEY : '';
+    const isCloudConfigured = SUPABASE_URL && 
+        !SUPABASE_URL.includes('placeholder') && 
+        !SUPABASE_URL.includes('your-project') && 
+        SUPABASE_ANON_KEY && 
+        SUPABASE_ANON_KEY !== 'your-anon-key' &&
+        SUPABASE_ANON_KEY !== 'your-supabase-anon-key';
+
+    if (!isCloudConfigured || typeof XMLHttpRequest === 'undefined') {
+        if (typeof onProgress === 'function') {
+            try { onProgress(100); } catch (e) {}
+        }
+        return {
+            success: true,
+            storage: 'indexeddb',
+            url: '',
+            name: file.name,
+            size: file.size,
+            type: file.type || 'application/octet-stream'
+        };
+    }
+
+    return new Promise((resolve) => {
+        try {
+            const xhr = new XMLHttpRequest();
+            const cleanName = (file.name || 'artwork').replace(/[^a-zA-Z0-9.\-_]/g, '_');
+            const storagePath = `orders/${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${cleanName}`;
+            const targetUrl = `${SUPABASE_URL}/storage/v1/object/order-artworks/${storagePath}`;
+
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable && typeof onProgress === 'function') {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    onProgress(percent);
+                }
+            });
+
+            xhr.addEventListener('load', () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/order-artworks/${storagePath}`;
+                    if (typeof onProgress === 'function') {
+                        try { onProgress(100); } catch (e) {}
+                    }
+                    resolve({
+                        success: true,
+                        storage: 'supabase',
+                        url: publicUrl,
+                        name: file.name,
+                        size: file.size,
+                        type: file.type || 'application/octet-stream'
+                    });
+                } else {
+                    console.warn('Supabase upload returned non-200, using local fallback:', xhr.status, xhr.responseText);
+                    resolve({
+                        success: true,
+                        storage: 'indexeddb',
+                        url: '',
+                        name: file.name,
+                        size: file.size,
+                        type: file.type || 'application/octet-stream'
+                    });
+                }
+            });
+
+            const handleFallback = (eventLabel) => {
+                console.warn(`Supabase upload ${eventLabel}, using local fallback`);
+                resolve({
+                    success: true,
+                    storage: 'indexeddb',
+                    url: '',
+                    name: file.name,
+                    size: file.size,
+                    type: file.type || 'application/octet-stream'
+                });
+            };
+
+            xhr.addEventListener('error', () => handleFallback('network error'));
+            xhr.addEventListener('abort', () => handleFallback('aborted'));
+            xhr.addEventListener('timeout', () => handleFallback('timeout'));
+
+            xhr.open('POST', targetUrl);
+            xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+            xhr.setRequestHeader('Authorization', `Bearer ${SUPABASE_ANON_KEY}`);
+            xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+            xhr.send(file);
+        } catch (err) {
+            console.warn('Supabase upload exception, using local fallback:', err);
+            resolve({
+                success: true,
+                storage: 'indexeddb',
+                url: '',
+                name: file.name,
+                size: file.size,
+                type: file.type || 'application/octet-stream'
+            });
+        }
+    });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     
     // Define backend URL based on environment
@@ -1680,39 +1792,165 @@ document.addEventListener('DOMContentLoaded', () => {
         previewImg.style.border = '1px solid rgba(255,255,255,0.1)';
         
         previewContainer.appendChild(previewImg);
-        
-        uploadInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const MAX_SIZE = 5 * 1024 * 1024;
-                if (file.size > MAX_SIZE) {
-                    if (typeof window.showToast === 'function') {
-                        window.showToast('File size exceeds 5MB limit. Please select a smaller file.', 'error');
-                    } else {
-                        alert('File size exceeds 5MB limit. Please select a smaller file.');
-                    }
-                    uploadInput.value = '';
-                    previewContainer.style.display = 'none';
-                    return;
-                }
 
-                if (file.type.startsWith('image/')) {
-                    previewImg.src = URL.createObjectURL(file);
-                    previewContainer.style.display = 'block';
+        // Upload progress indicator box
+        const progressBox = document.createElement('div');
+        progressBox.id = 'modalUploadProgress';
+        progressBox.className = 'artwork-upload-progress-box';
+        progressBox.style.display = 'none';
+
+        const progressStatus = document.createElement('div');
+        progressStatus.className = 'artwork-upload-status';
+
+        const progressStatusText = document.createElement('span');
+        progressStatusText.className = 'artwork-status-text';
+        progressStatusText.textContent = 'Uploading artwork...';
+
+        const progressStatusPct = document.createElement('span');
+        progressStatusPct.className = 'artwork-status-pct';
+        progressStatusPct.textContent = '0%';
+
+        progressStatus.appendChild(progressStatusText);
+        progressStatus.appendChild(progressStatusPct);
+
+        const progressTrack = document.createElement('div');
+        progressTrack.className = 'artwork-progress-bar-track';
+
+        const progressFill = document.createElement('div');
+        progressFill.className = 'artwork-progress-bar-fill';
+        progressFill.style.width = '0%';
+
+        progressTrack.appendChild(progressFill);
+        progressBox.appendChild(progressStatus);
+        progressBox.appendChild(progressTrack);
+
+        let activeUploadPromise = null;
+        let currentUploadedDesign = null;
+        
+        uploadInput.addEventListener('change', async function(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) {
+                previewContainer.style.display = 'none';
+                progressBox.style.display = 'none';
+                currentUploadedDesign = null;
+                activeUploadPromise = null;
+                return;
+            }
+
+            const MAX_SIZE = 50 * 1024 * 1024;
+            if (file.size > MAX_SIZE) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('File size exceeds 50MB limit. Please select a smaller file.', 'error');
                 } else {
-                    previewContainer.style.display = 'none';
-                    if (typeof window.showToast === 'function') {
-                        window.showToast(`Selected file: ${file.name}`, 'info');
-                    }
+                    alert('File size exceeds 50MB limit. Please select a smaller file.');
                 }
+                uploadInput.value = '';
+                previewContainer.style.display = 'none';
+                progressBox.style.display = 'none';
+                currentUploadedDesign = null;
+                activeUploadPromise = null;
+                return;
+            }
+
+            if (file.type && file.type.startsWith('image/')) {
+                previewImg.src = URL.createObjectURL(file);
+                previewContainer.style.display = 'block';
             } else {
                 previewContainer.style.display = 'none';
+                if (typeof window.showToast === 'function') {
+                    window.showToast(`Selected file: ${file.name}`, 'info');
+                }
             }
+
+            // Display progress box and set uploading state
+            progressBox.style.display = 'block';
+            progressStatus.classList.remove('complete');
+            progressStatusText.textContent = 'Uploading artwork...';
+            progressStatusPct.textContent = '0%';
+            progressFill.style.width = '0%';
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Uploading Artwork (0%)...';
+            }
+
+            const artworkId = 'art_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+            const onProgress = (percent) => {
+                progressFill.style.width = `${percent}%`;
+                progressStatusPct.textContent = `${percent}%`;
+                if (submitBtn && submitBtn.disabled) {
+                    submitBtn.textContent = `Uploading Artwork (${percent}%)...`;
+                }
+            };
+
+            activeUploadPromise = (async () => {
+                let thumbUrl = null;
+                try {
+                    if (window.ArtworkStore) {
+                        await window.ArtworkStore.save(artworkId, file);
+                    }
+                    if (typeof window.createThumbnail === 'function') {
+                        thumbUrl = await window.createThumbnail(file);
+                    }
+                } catch (storeErr) {
+                    console.warn('Error storing artwork locally:', storeErr);
+                }
+
+                let uploadResult = null;
+                try {
+                    if (typeof window.uploadArtworkToSupabase === 'function') {
+                        uploadResult = await window.uploadArtworkToSupabase(file, onProgress);
+                    }
+                } catch (upErr) {
+                    console.warn('Error in uploadArtworkToSupabase:', upErr);
+                }
+
+                if (!uploadResult) {
+                    uploadResult = {
+                        success: true,
+                        storage: 'indexeddb',
+                        url: '',
+                        name: file.name,
+                        size: file.size,
+                        type: file.type || 'application/octet-stream'
+                    };
+                }
+
+                // Completion status update
+                progressFill.style.width = '100%';
+                progressStatusPct.textContent = '100%';
+                progressStatus.classList.add('complete');
+                if (uploadResult.storage === 'supabase' && uploadResult.url) {
+                    progressStatusText.textContent = '✓ Uploaded to cloud';
+                } else {
+                    progressStatusText.textContent = '✓ Attached locally for submission';
+                }
+
+                currentUploadedDesign = {
+                    id: artworkId,
+                    name: file.name,
+                    size: file.size,
+                    type: file.type || 'application/octet-stream',
+                    previewUrl: thumbUrl,
+                    url: uploadResult.url || thumbUrl || '',
+                    storage: uploadResult.storage || 'indexeddb'
+                };
+
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Add to Order Request →';
+                }
+
+                return currentUploadedDesign;
+            })();
+
+            await activeUploadPromise;
         });
         
         uploadGroup.appendChild(uploadLabel);
         uploadGroup.appendChild(uploadInput);
         uploadGroup.appendChild(previewContainer);
+        uploadGroup.appendChild(progressBox);
         optionsContainer.appendChild(uploadGroup);
 
         // Configure Action Button (Direct Inquiry / Add to Order Request)
@@ -1721,8 +1959,14 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.textContent = 'Add to Order Request →';
             submitBtn.onclick = async function(e) {
                 e.preventDefault();
+
+                if (activeUploadPromise) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Finalizing upload...';
+                    await activeUploadPromise;
+                }
                 
-                const originalBtnText = submitBtn.textContent;
+                const originalBtnText = 'Add to Order Request →';
                 submitBtn.textContent = 'Adding...';
                 submitBtn.disabled = true;
 
@@ -1730,18 +1974,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     const options = [];
                     const selects = optionsContainer.querySelectorAll('select.modal-option-select');
                     selects.forEach(select => {
-                        const label = select.previousElementSibling.textContent;
-                        const val = select.options[select.selectedIndex].textContent;
+                        const label = select.previousElementSibling ? select.previousElementSibling.textContent : '';
+                        const val = select.options[select.selectedIndex] ? select.options[select.selectedIndex].textContent : '';
                         options.push({label, value: val});
                     });
                     
-                    let uploadedDesign = null;
+                    let uploadedDesign = currentUploadedDesign;
                     const fileInput = document.getElementById('modal_design_file');
-                    if (fileInput && fileInput.files && fileInput.files[0]) {
+                    if (!uploadedDesign && fileInput && fileInput.files && fileInput.files[0]) {
                         const file = fileInput.files[0];
-                        const MAX_SIZE = 5 * 1024 * 1024;
+                        const MAX_SIZE = 50 * 1024 * 1024;
                         if (file.size > MAX_SIZE) {
-                            window.showToast('File size exceeds 5MB limit.', 'error');
+                            window.showToast('File size exceeds 50MB limit.', 'error');
                             submitBtn.textContent = originalBtnText;
                             submitBtn.disabled = false;
                             return;
@@ -1760,13 +2004,19 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.warn('Error storing artwork locally:', storeErr);
                         }
 
+                        let uploadResult = null;
+                        if (typeof window.uploadArtworkToSupabase === 'function') {
+                            uploadResult = await window.uploadArtworkToSupabase(file);
+                        }
+
                         uploadedDesign = {
                             id: artworkId,
                             name: file.name,
                             size: file.size,
                             type: file.type || 'application/octet-stream',
                             previewUrl: thumbUrl,
-                            url: thumbUrl || ''
+                            url: (uploadResult && uploadResult.url) || thumbUrl || '',
+                            storage: (uploadResult && uploadResult.storage) || 'indexeddb'
                         };
                     }
 

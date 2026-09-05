@@ -2472,5 +2472,38 @@ select.form-control option {
   }
 }
 
-
-
+/* ==========================================================================
+   SUPABASE STORAGE UPLOAD PROGRESS BAR
+   ========================================================================== */
+.artwork-upload-progress-box {
+  margin-top: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+}
+.artwork-progress-bar-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 0.4rem;
+}
+.artwork-progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #C9A84C, #ffd700);
+  border-radius: 3px;
+  transition: width 0.2s ease;
+}
+.artwork-upload-status {
+  font-size: 0.78rem;
+  color: var(--gray);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.artwork-upload-status.complete {
+  color: #2ecc71;
+}
