@@ -15,3 +15,9 @@
 - Database & Storage: Supabase (PostgreSQL & storage buckets).
 
 ---
+
+## Phase 1 — Country Dial Code Sync & Transactional Email Push — 2026-09-05
+- Verified local test suites with Playwright (`scripts/verify-phase1.js` and `scripts/test-browser.js`).
+- Committed and pushed to GitHub remote `origin/master` (`heyabdullah958-dot/ApexPrinting`).
+- Automatically triggers Vercel serverless deployment pipeline at `https://apex-printing.vercel.app`.
+- Environment configuration: `quotes@apexprinthub.com` configured for `EMAIL_FROM`, `EMAIL_REPLY_TO`, and `OWNER_EMAIL`.

@@ -19,3 +19,14 @@ This log tracks generalized patterns, wrong assumptions, and root causes across 
 - **What actually mattered**: With CSS `perspective: D` and card position at `translateZ(Z)`, the front-most card is magnified by scale factor $S = \frac{D}{D - Z}$. If $D=1400$ and $Z=606$, magnification is $1.76\times$ ($545\text{px}$ visual height), causing downward bleed into adjacent sections. Raising $D$ to $2000\text{px}$ stabilizes the scale to $1.4\times$ and ensures clean vertical separation without distortion.
 - **Applies to**: `style.css`, `script.js`, any 3D carousel / card slider implementations.
 
+---
+
+## Lesson 3 — Phone Dial Code Sync & Transactional SMTP Reply-To Routing — 2026-09-05
+- **Pattern**: Synchronizing country selection with phone inputs and configuring brand-authenticated transactional mailers.
+- **Wrong assumption made**: Assuming that simply changing placeholder text or setting an unlinked value is sufficient for phone country sync, and assuming SMTP transport authentication automatically handles user replies.
+- **What actually mattered**: 
+  1. Phone input synchronization must use regex subscriber extraction (`/^(?:\+?\d{1,4}|00\d{1,4})?[\s\-\.]*(?:0)?(.*)$/`) to swap dial code prefixes while strictly preserving valid user-typed numbers and stripping national leading zeros.
+  2. In transactional email services where SMTP transport user differs from customer-facing business addresses, RFC 5322 `replyTo` must be explicitly declared (`replyTo: quotes@apexprinthub.com` for client confirmations, `replyTo: data.email` for admin notifications) to guarantee replies route to the intended mailbox.
+- **Applies to**: `contact.html`, `script.js`, `backend/services/email.js`, any checkout/inquiry workflows.
+
+

@@ -51,5 +51,23 @@ Initial tracking of project changes.
   - Populated 16 cards across 8 authentic Apex print product categories with rich captions and high-resolution assets.
 - **Verification & Isolation**:
   - Verified 100% on `localhost:8000` via automated Playwright test suite with 0 console errors; zero production deployment.
+---
+
+## Phase 1 — Checkout Country Code Sync & Order Confirmation Email Integration — 2026-09-05
+- **Frontend / Order Placement**:
+  - Bound `#country` selector to `#phone` input in `contact.html` and `script.js`.
+  - Added dynamic dial code synchronization for UAE (+971), Saudi Arabia (+966), and Pakistan (+92), updating the phone field's dial code prefix and placeholder upon region change.
+  - Implemented regex-based subscriber digit preservation to prevent resetting or mangling valid user-typed numbers on country change.
+  - Added focus/click auto-population of the active dial code for empty phone fields.
+- **Backend / Mailer Service**:
+  - Configured transactional mailer in `backend/services/email.js` using `quotes@apexprinthub.com` for `EMAIL_FROM`, `EMAIL_REPLY_TO`, and `OWNER_EMAIL`.
+  - Enforced `from: "Apex Print Hub" <quotes@apexprinthub.com>` and `replyTo: quotes@apexprinthub.com` on all customer transactional confirmation receipts.
+  - Routed incoming store owner notifications to `quotes@apexprinthub.com` with customer reply-to headers.
+  - Enriched order inquiry confirmation templates with Region and Artwork attachment details.
+  - Updated environment templates in `backend/.env` and `backend/.env.example`.
+- **Verification**:
+  - Created automated Playwright verification suite (`scripts/verify-phase1.js`) validating country code swapping across UAE, Saudi Arabia, Pakistan, and digit retention.
+  - Verified full Nodemailer options payload generation and customer/owner email dispatch.
+  - Verified 100% pass across existing browser regression suite (`scripts/test-browser.js`).
 
 

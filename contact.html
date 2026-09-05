@@ -123,15 +123,15 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                             <div class="form-group">
                                 <label for="phone" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Phone</label>
-                                <input type="tel" id="phone" name="phone" class="form-control" placeholder="+971 XX XXX XXXX">
+                                <input type="tel" id="phone" name="phone" class="form-control" placeholder="+971 50 123 4567">
                             </div>
                             <div class="form-group">
                                 <label for="country" style="display: block; font-family: var(--font-label); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 0.5rem; color: var(--gray);">Region</label>
                                 <select id="country" name="country" class="form-control">
-                                    <option value="UAE">🇦🇪 UAE / Dubai</option>
-                                    <option value="PKR">🇵🇰 Pakistan</option>
-                                    <option value="SAR">🇸🇦 Saudi Arabia</option>
-                                    <option value="Other">🌍 Other</option>
+                                    <option value="UAE" data-code="+971">🇦🇪 UAE / Dubai (+971)</option>
+                                    <option value="PKR" data-code="+92">🇵🇰 Pakistan (+92)</option>
+                                    <option value="SAR" data-code="+966">🇸🇦 Saudi Arabia (+966)</option>
+                                    <option value="Other" data-code="+">🌍 Other</option>
                                 </select>
                             </div>
                         </div>

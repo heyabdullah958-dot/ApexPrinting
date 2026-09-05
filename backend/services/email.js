@@ -11,7 +11,10 @@ const transporter = nodemailer.createTransport({
   socketTimeout: 15000
 });
 
-const OWNER_EMAIL = process.env.OWNER_EMAIL || process.env.EMAIL_USER;
+const DEFAULT_COMPANY_EMAIL = 'quotes@apexprinthub.com';
+const EMAIL_FROM = process.env.EMAIL_FROM || DEFAULT_COMPANY_EMAIL;
+const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || DEFAULT_COMPANY_EMAIL;
+const OWNER_EMAIL = process.env.OWNER_EMAIL || DEFAULT_COMPANY_EMAIL;
 
 // Responsive luxury HTML wrapper matching Apex Print Hub branding
 const generateHtml = (title, content, preheader = '') => `
@@ -57,21 +60,25 @@ const generateHtml = (title, content, preheader = '') => `
 </html>
 `;
 
-async function sendEmail({ to, subject, html, preheader, attachments }) {
+async function sendEmail({ to, subject, html, preheader, attachments, from, replyTo }) {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.warn('⚠️ Email credentials missing from environment, skipping send for:', subject);
     return false;
   }
   
   try {
+    const senderAddress = from || `"Apex Print Hub" <${EMAIL_FROM}>`;
+    const replyAddress = replyTo || EMAIL_REPLY_TO;
+
     const info = await transporter.sendMail({
-      from: `"Apex Print Hub" <${process.env.EMAIL_USER}>`,
+      from: senderAddress,
       to,
+      replyTo: replyAddress,
       subject,
       html: generateHtml(subject, html, preheader),
       attachments
     });
-    console.log(`✉️ Email successfully dispatched to ${to} (MessageID: ${info.messageId})`);
+    console.log(`✉️ Email successfully dispatched to ${to} (From: ${senderAddress}, Reply-To: ${replyAddress}, MessageID: ${info.messageId})`);
     return true;
   } catch (error) {
     console.error(`❌ Email send failed to ${to}:`, error.message);
@@ -103,6 +110,8 @@ async function notifyOwnerNewContact(data) {
 
   const mailOptions = {
     to: OWNER_EMAIL,
+    from: `"Apex Print Hub" <${EMAIL_FROM}>`,
+    replyTo: data.email,
     subject: `📨 New Order Request: ${data.service} — ${data.name}`,
     preheader: `New order request submitted by ${data.name} for ${data.service}.`,
     html
@@ -135,6 +144,8 @@ async function confirmCustomerContact(data) {
         <tr><td width="30%" style="padding: 5px 0; color: #888888;"><strong>Service:</strong></td><td style="padding: 5px 0; color: #FFFFFF;">${data.service}</td></tr>
         <tr><td style="padding: 5px 0; color: #888888;"><strong>Contact Email:</strong></td><td style="padding: 5px 0; color: #FFFFFF;">${data.email}</td></tr>
         ${data.phone ? `<tr><td style="padding: 5px 0; color: #888888;"><strong>Contact Phone:</strong></td><td style="padding: 5px 0; color: #FFFFFF;">${data.phone}</td></tr>` : ''}
+        ${data.country ? `<tr><td style="padding: 5px 0; color: #888888;"><strong>Region / Country:</strong></td><td style="padding: 5px 0; color: #FFFFFF;">${data.country}</td></tr>` : ''}
+        ${data.file ? `<tr><td style="padding: 5px 0; color: #888888;"><strong>Attached Artwork:</strong></td><td style="padding: 5px 0; color: #C9A84C;">${data.file.originalname}</td></tr>` : ''}
       </table>
     </div>
 
@@ -152,12 +163,15 @@ async function confirmCustomerContact(data) {
 
     <p style="font-size: 14px; color: #888888; margin-bottom: 0;">
       Warm regards,<br>
-      <strong style="color: #FFFFFF;">The Apex Print Hub Production Team</strong>
+      <strong style="color: #FFFFFF;">The Apex Print Hub Production Team</strong><br>
+      <a href="mailto:${EMAIL_REPLY_TO}" style="color: #C9A84C; text-decoration: none;">${EMAIL_REPLY_TO}</a>
     </p>
   `;
 
   return sendEmail({
     to: data.email,
+    from: `"Apex Print Hub" <${EMAIL_FROM}>`,
+    replyTo: EMAIL_REPLY_TO,
     subject: `Order Request Received: ${data.service} — Apex Print Hub`,
     preheader: `Thank you for your order request for ${data.service}. Our team will contact you shortly.`,
     html
@@ -202,6 +216,8 @@ async function notifyOwnerNewQuote(data) {
 
   return sendEmail({
     to: OWNER_EMAIL,
+    from: `"Apex Print Hub" <${EMAIL_FROM}>`,
+    replyTo: data.email,
     subject: `📋 Direct Quote Request: ${data.service} — ${data.name}`,
     preheader: `Direct quote request from ${data.name} for ${data.service}.`,
     html
@@ -228,6 +244,7 @@ async function confirmCustomerQuote(data) {
         <tr><td style="padding: 4px 0; color: #888888;"><strong>Paper Stock:</strong></td><td style="padding: 4px 0; color: #FFFFFF;">${data.paper_type || 'Custom'}</td></tr>
         <tr><td style="padding: 4px 0; color: #888888;"><strong>Finishing:</strong></td><td style="padding: 4px 0; color: #FFFFFF;">${data.finishing || 'None'}</td></tr>
         <tr><td style="padding: 4px 0; color: #888888;"><strong>Printed Sides:</strong></td><td style="padding: 4px 0; color: #FFFFFF;">${data.sides || 'Single / Double'}</td></tr>
+        ${data.country ? `<tr><td style="padding: 4px 0; color: #888888;"><strong>Region / Country:</strong></td><td style="padding: 4px 0; color: #FFFFFF;">${data.country}</td></tr>` : ''}
       </table>
     </div>
 
@@ -246,12 +263,15 @@ async function confirmCustomerQuote(data) {
 
     <p style="font-size: 14px; color: #888888; margin-bottom: 0;">
       Best regards,<br>
-      <strong style="color: #FFFFFF;">The Apex Print Hub Estimation Team</strong>
+      <strong style="color: #FFFFFF;">The Apex Print Hub Estimation Team</strong><br>
+      <a href="mailto:${EMAIL_REPLY_TO}" style="color: #C9A84C; text-decoration: none;">${EMAIL_REPLY_TO}</a>
     </p>
   `;
 
   return sendEmail({
     to: data.email,
+    from: `"Apex Print Hub" <${EMAIL_FROM}>`,
+    replyTo: EMAIL_REPLY_TO,
     subject: `Quote Request Confirmation: ${data.service} — Apex Print Hub`,
     preheader: `We have received your quotation request for ${data.service}.`,
     html

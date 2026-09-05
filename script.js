@@ -202,6 +202,83 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 6b. Dynamic Country & Phone Dial Code Synchronization (contact.html)
+    const countrySelect = document.getElementById('country');
+    const phoneInput = document.getElementById('phone');
+
+    if (countrySelect && phoneInput) {
+        const DIAL_CODE_MAP = {
+            'UAE': { code: '+971', placeholder: '+971 50 123 4567' },
+            'SAR': { code: '+966', placeholder: '+966 50 123 4567' },
+            'PKR': { code: '+92', placeholder: '+92 300 1234567' },
+            'Other': { code: '+', placeholder: '+XX XXX XXXXXXX' }
+        };
+
+        function getDialCodeConfig() {
+            const selectedOpt = countrySelect.options[countrySelect.selectedIndex];
+            if (selectedOpt && selectedOpt.dataset && selectedOpt.dataset.code) {
+                const code = selectedOpt.dataset.code;
+                const val = countrySelect.value;
+                const placeholder = (DIAL_CODE_MAP[val] && DIAL_CODE_MAP[val].placeholder) || `${code} XX XXX XXXX`;
+                return { code, placeholder };
+            }
+            const val = countrySelect.value || 'UAE';
+            return DIAL_CODE_MAP[val] || DIAL_CODE_MAP['Other'];
+        }
+
+        function syncDialCode(forceValueUpdate = true) {
+            const config = getDialCodeConfig();
+            const newCode = config.code;
+            phoneInput.placeholder = config.placeholder;
+
+            if (!forceValueUpdate && !phoneInput.value) {
+                return;
+            }
+
+            const currentVal = phoneInput.value.trim();
+
+            if (!currentVal) {
+                if (forceValueUpdate) {
+                    phoneInput.value = newCode === '+' ? '+' : `${newCode} `;
+                }
+                return;
+            }
+
+            // Check if current value is only a dial code or plus
+            const isJustPrefix = /^\+?(971|966|92|\d{1,4})?\s*$/.test(currentVal);
+            if (isJustPrefix) {
+                phoneInput.value = newCode === '+' ? '+' : `${newCode} `;
+                return;
+            }
+
+            // Extract subscriber digits, stripping any previous country code (+971, +966, +92, etc.) or leading 0
+            const prefixRegex = /^(?:\+?(?:971|966|92|\d{1,4})|00(?:971|966|92|\d{1,4}))?[\s\-\.]*(?:0)?(.*)$/;
+            const match = currentVal.match(prefixRegex);
+            const subscriber = match && match[1] ? match[1].trim() : currentVal.replace(/^\+?\d{1,4}\s*/, '').trim();
+
+            if (subscriber) {
+                phoneInput.value = newCode === '+' ? `+${subscriber}` : `${newCode} ${subscriber}`;
+            } else {
+                phoneInput.value = newCode === '+' ? '+' : `${newCode} `;
+            }
+        }
+
+        countrySelect.addEventListener('change', () => syncDialCode(true));
+
+        function handlePhoneFocus() {
+            if (!phoneInput.value.trim()) {
+                const config = getDialCodeConfig();
+                phoneInput.value = config.code === '+' ? '+' : `${config.code} `;
+            }
+        }
+
+        phoneInput.addEventListener('focus', handlePhoneFocus);
+        phoneInput.addEventListener('click', handlePhoneFocus);
+
+        // Initialize state on page load
+        syncDialCode(false);
+    }
+
     // 7. Contact Form Validation (contact.html)
     const contactForm = document.getElementById('contactForm');
     const formSuccess = document.getElementById('formSuccess');
