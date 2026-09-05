@@ -40,4 +40,18 @@ This log tracks generalized patterns, wrong assumptions, and root causes across 
 - **Applies to**: `script.js`, `contact.html`, `backend/routes/contact.js`, multi-file upload & cart architectures.
 ---
 
-
+## Lesson 5 — Chromium Top-Frame Blob/Data Navigation, Direct Cloud Streaming & Offline Resilience — 2026-09-06
+- **Pattern**: Previewing user-uploaded artwork, managing multi-megabyte graphic files on serverless web architectures, and preventing browser navigation breakage.
+- **Wrong assumptions made**:
+  1. Assuming `window.open(blobUrl, '_blank')` or `<a href="blob:..." target="_blank">` is safe across page loads or when pointing to data URLs.
+  2. Assuming heavy print artwork files (up to 50MB) can simply be uploaded in a single multipart POST payload through serverless API gateways like Vercel.
+  3. Assuming that integrating cloud storage (Supabase) means local storage can be discarded or that cloud outages should block users from checking out.
+- **What actually mattered**:
+  1. **Top-Frame Navigation Security in Chromium**:
+     Modern Chromium blocks top-frame navigation to `data:` URIs and revokes `blob:` URLs as soon as their originating document context is unloaded. Attempting to open them in a new tab triggers `ERR_FILE_NOT_FOUND` or silent security blocks. The reliable architectural pattern is to inspect media within an in-app lightbox modal (`#artworkLightboxModal`) that creates a temporary object URL from IndexedDB on-demand, binds it to an `<img>` element with CSS scale/zoom transforms, and revokes it immediately when the modal closes.
+  2. **Direct Client-to-Cloud Uploads for Serverless Payload Protection**:
+     Vercel and AWS Lambda strictly enforce body limits (4.5MB on Vercel). Submitting high-resolution customer artwork directly through the backend serverless route leads to HTTP 413 Payload Too Large errors. By uploading directly from the client's browser to Supabase Storage via XHR and transmitting only the permanent CDN URL string in the order JSON payload, serverless payload sizes remain tiny (<50KB) regardless of file size.
+  3. **Zero-Breakage Graceful Fallback (Offline/Unconfigured Resilience)**:
+     Production systems must never crash when external cloud storage services are slow, misconfigured, or offline. By wrapping client-to-cloud uploads with an automatic fallback to local IndexedDB (`ArtworkStore`), orders can still be constructed, saved, customized, and submitted without failure. On the backend, routes should dynamically inspect whether items contain cloud links or local multipart binaries, supporting both paths transparently.
+- **Applies to**: `script.js`, `backend/routes/contact.js`, `backend/services/email.js`, file upload & storage architectures.
+---

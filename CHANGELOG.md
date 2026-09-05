@@ -86,4 +86,33 @@ Initial tracking of project changes.
   - 100% test pass verified.
 ---
 
-
+## Production Release — Cart Artwork Persistence, In-App Luxury Lightbox & Direct Cloud Streaming — 2026-09-06
+- **Direct Client-to-Cloud Upload Pipeline (`window.uploadArtworkToSupabase`)**:
+  - Implemented client-side direct streaming to Supabase Storage bucket (`order-artworks`) with sanitized timestamped paths (`orders/<timestamp>_<random>_<filename>`).
+  - Added XHR progress tracking emitting continuous percentage events (0–100%) to drive live progress indicators.
+  - Zero-breakage fallback architecture: when cloud credentials are unconfigured or when network anomalies occur, seamlessly defaults to local IndexedDB storage and canvas thumbnail generation without user disruption.
+- **Luxury Upload Progress Bar & Modal Integration**:
+  - Added luxury gold-gradient animated progress indicators (`.artwork-upload-progress-box`, `.artwork-progress-bar-track`, `.artwork-progress-bar-fill`) in the product customization modal.
+  - Disabled submit button with live upload percentage readout during transfer (`Uploading Artwork (XX%)...`) to prevent premature submission.
+  - Displays instant status transitions upon completion (`✓ Uploaded to cloud` or `✓ Attached locally for submission`).
+- **Luxury In-App Artwork Lightbox Modal (`#artworkLightboxModal`)**:
+  - Eliminated broken `blob:` tab navigation and Chromium `ERR_FILE_NOT_FOUND` errors by implementing an in-app glassmorphism modal on both `services.html` and `contact.html`.
+  - Responsive header featuring format badges (PNG, PDF, AI, PSD), filename tooltip, interactive zoom engine (50% to 300% zoom with live percentage display), and accessible close buttons.
+  - Dedicated media views: high-resolution raster image viewport with pan/zoom scaling, and vector document card with scalable SVG icon.
+  - Full keyboard accessibility (Escape key dismiss) and backdrop click dismiss.
+- **Interactive Checkout Review Panel & Per-Item Artwork Swap (`contact.html`)**:
+  - Enhanced `#checkoutOrderReview` cards with per-item `.btn-checkout-swap` action buttons (`Change Artwork` / `+ Attach Artwork`).
+  - Allows customers to replace or attach artwork directly on the checkout review screen without navigating back to the product catalog.
+  - Reactively downsamples thumbnails, updates `localStorage`, persists binaries into `ArtworkStore`, cleans up orphaned files from IndexedDB, and updates the review DOM in real time.
+- **Vercel Payload Optimization & Serverless Safety**:
+  - Re-architected form submission to check for permanent cloud CDN URLs (`http://` or `https://`) in `item.design.url`.
+  - For cloud-stored assets, passes the public URL inside `cart_data` JSON and bypasses binary multipart attachment, strictly complying with Vercel's 4.5MB serverless payload ceiling for large artwork files (up to 50MB).
+  - For local fallback assets, safely retrieves binary `File` objects from `ArtworkStore` and appends to `cart_artworks`.
+- **Enhanced Transactional Email Pipeline (`backend/services/email.js` & `backend/routes/contact.js`)**:
+  - Contact route parses `cart_data` and synthesizes clean `[Cloud-Hosted Print Artwork (N)]` summaries with formatted MB sizes into order specifications.
+  - Owner notification email injects luxury dark gold card section `☁️ Cloud-Hosted High-Resolution Print Artwork:` featuring itemized product tables and prominent gold one-click download action buttons (`Download File ↗`, `#C9A84C`).
+  - Customer confirmation email reassuringly outlines prepress storage status (`🎨 Uploaded Production Artwork`) and provides direct proof download links.
+- **Authoritative Automated Production Test Suite (`scripts/test-artwork-flow-production.js`)**:
+  - 9-stage end-to-end automated Playwright verification suite testing the entire user journey: product modal upload, progress bar, PDF attachment, in-app lightbox, zero broken popup tabs, checkout review, per-item artwork swap, multipart form submission, post-submission storage purge, and backend email HTML generation.
+  - 100% test pass verified with zero console errors.
+---
