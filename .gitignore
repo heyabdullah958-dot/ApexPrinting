@@ -8,4 +8,6 @@ backend/uploads/
 dist-export/
 .agents/
 New folder (2)/
-scripts/screenshots/
+scripts/screenshots/
+.superpowers/
+temp_test_artwork/
