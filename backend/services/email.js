@@ -90,6 +90,32 @@ async function sendEmail({ to, subject, html, preheader, attachments, from, repl
 async function notifyOwnerNewContact(data) {
   const files = data.files || (data.file ? [data.file] : []);
 
+  let cloudLinksHtml = '';
+  if (data.cartData && Array.isArray(data.cartData)) {
+    const cloudItems = data.cartData.filter(it => it && it.design && it.design.url && (it.design.url.startsWith('http://') || it.design.url.startsWith('https://')));
+    if (cloudItems.length > 0) {
+      cloudLinksHtml = `
+    <div style="background-color: #1a1a1a; border: 1px solid #C9A84C; border-radius: 6px; padding: 16px; margin-bottom: 20px;">
+      <h4 style="margin: 0 0 12px 0; color: #C9A84C; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">
+        ☁️ Cloud-Hosted High-Resolution Print Artwork:
+      </h4>
+      <table width="100%" style="font-size: 13px; color: #CCCCCC; border-collapse: collapse;">
+        ${cloudItems.map(it => {
+          const sizeMB = typeof it.design.size === 'number' ? (it.design.size / (1024 * 1024)).toFixed(2) : '0.00';
+          return `
+          <tr>
+            <td style="padding: 8px 0; border-bottom: 1px solid #262626;"><strong style="color: #FFFFFF;">${it.title || 'Product'}:</strong> ${it.design.name || 'artwork'} <span style="color: #888888;">(${sizeMB} MB)</span></td>
+            <td align="right" style="padding: 8px 0; border-bottom: 1px solid #262626;">
+              <a href="${it.design.url}" target="_blank" style="background-color: #C9A84C; color: #000000; padding: 6px 14px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 12px; display: inline-block;">Download File ↗</a>
+            </td>
+          </tr>
+          `;
+        }).join('')}
+      </table>
+    </div>`;
+    }
+  }
+
   const html = `
     <h2 style="color: #FFFFFF; font-size: 20px; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #2a2a2a; padding-bottom: 12px;">
       🔔 New Order Inquiry Received
@@ -103,6 +129,7 @@ async function notifyOwnerNewContact(data) {
         <tr><td style="padding: 6px 0; color: #888888;"><strong>Service:</strong></td><td style="padding: 6px 0; color: #C9A84C; font-weight: bold;">${data.service}</td></tr>
       </table>
     </div>
+    ${cloudLinksHtml}
     <div style="margin-bottom: 20px;">
       <h3 style="color: #C9A84C; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Order / Project Specifications:</h3>
       <div style="white-space: pre-wrap; background-color: #1a1a1a; padding: 15px; border-left: 3px solid #C9A84C; border-radius: 0 4px 4px 0; font-family: monospace; font-size: 13px; color: #E0E0E0; line-height: 1.5;">${data.message}</div>
@@ -141,6 +168,40 @@ async function notifyOwnerNewContact(data) {
 // 2. Customer Confirmation for Order Request or Contact
 async function confirmCustomerContact(data) {
   const files = data.files || (data.file ? [data.file] : []);
+  const cartItemsWithDesign = (data.cartData && Array.isArray(data.cartData))
+    ? data.cartData.filter(it => it && it.design && (it.design.name || it.design.url))
+    : [];
+
+  let customerArtworkHtml = '';
+  if (cartItemsWithDesign.length > 0) {
+    customerArtworkHtml = `
+    <div style="background-color: #1a1a1a; border: 1px solid #2e2e2e; border-radius: 6px; padding: 16px; margin-bottom: 20px;">
+      <h4 style="margin: 0 0 10px 0; color: #C9A84C; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">
+        🎨 Uploaded Production Artwork (${cartItemsWithDesign.length}):
+      </h4>
+      <p style="margin: 0 0 12px 0; font-size: 13px; color: #AAAAAA; line-height: 1.5;">
+        Your high-resolution artwork files have been received and securely stored for prepress review.
+      </p>
+      <table width="100%" style="font-size: 13px; color: #CCCCCC; border-collapse: collapse;">
+        ${cartItemsWithDesign.map(it => {
+          const sizeMB = typeof it.design.size === 'number' ? (it.design.size / (1024 * 1024)).toFixed(2) : '0.00';
+          const hasCloudUrl = it.design.url && (it.design.url.startsWith('http://') || it.design.url.startsWith('https://'));
+          return `
+          <tr>
+            <td style="padding: 8px 0; border-bottom: 1px solid #262626;">
+              <strong style="color: #FFFFFF;">${it.title || 'Product'}:</strong> ${it.design.name || 'Artwork file'} <span style="color: #888888;">(${sizeMB} MB)</span>
+            </td>
+            <td align="right" style="padding: 8px 0; border-bottom: 1px solid #262626;">
+              ${hasCloudUrl 
+                ? `<a href="${it.design.url}" target="_blank" style="background-color: #262626; border: 1px solid #C9A84C; color: #C9A84C; padding: 4px 10px; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 11px; display: inline-block;">Download File ↗</a>` 
+                : `<span style="color: #888888; font-size: 11px;">Attached to Request</span>`}
+            </td>
+          </tr>
+          `;
+        }).join('')}
+      </table>
+    </div>`;
+  }
 
   const html = `
     <h2 style="color: #FFFFFF; font-size: 20px; margin-top: 0; margin-bottom: 12px;">
@@ -160,13 +221,29 @@ async function confirmCustomerContact(data) {
         ${data.country ? `<tr><td style="padding: 5px 0; color: #888888;"><strong>Region / Country:</strong></td><td style="padding: 5px 0; color: #FFFFFF;">${data.country}</td></tr>` : ''}
         ${files.length > 0 ? `
         <tr>
-          <td width="30%" style="padding: 5px 0; color: #888888; vertical-align: top;"><strong>Attached Artwork:</strong></td>
+          <td width="30%" style="padding: 5px 0; color: #888888; vertical-align: top;"><strong>Attached Files:</strong></td>
           <td style="padding: 5px 0; color: #C9A84C;">
             ${files.map(f => `<div>✓ ${f.originalname} <span style="color: #888888; font-size: 12px;">(${(f.size / 1024).toFixed(0)} KB)</span></div>`).join('')}
           </td>
         </tr>` : ''}
+        ${cartItemsWithDesign.length > 0 ? `
+        <tr>
+          <td width="30%" style="padding: 5px 0; color: #888888; vertical-align: top;"><strong>Cart Artwork:</strong></td>
+          <td style="padding: 5px 0; color: #CCCCCC;">
+            ${cartItemsWithDesign.map(it => {
+              const sizeMB = typeof it.design.size === 'number' ? (it.design.size / (1024 * 1024)).toFixed(2) : '0.00';
+              const hasCloudUrl = it.design.url && (it.design.url.startsWith('http://') || it.design.url.startsWith('https://'));
+              return `<div style="margin-bottom: 4px;">
+                <span style="color: #C9A84C;">✓</span> <strong>${it.title || 'Product'}:</strong> ${it.design.name || 'Artwork'} <span style="color: #888888; font-size: 12px;">(${sizeMB} MB)</span>
+                ${hasCloudUrl ? `&nbsp;&middot;&nbsp;<a href="${it.design.url}" target="_blank" style="color: #C9A84C; text-decoration: none; font-size: 12px;">Download ↗</a>` : ''}
+              </div>`;
+            }).join('')}
+          </td>
+        </tr>` : ''}
       </table>
     </div>
+
+    ${customerArtworkHtml}
 
     <div style="margin-bottom: 25px;">
       <h3 style="color: #C9A84C; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Submitted Specifications:</h3>

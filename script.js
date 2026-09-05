@@ -632,12 +632,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append('design_file', designFile);
                 }
 
-                // Append itemized cart data and binary artworks from IndexedDB
+                // Append itemized cart data and binary artworks from IndexedDB (fallback only)
                 if (typeof cart !== 'undefined' && cart.length > 0) {
                     formData.append('cart_data', JSON.stringify(cart));
                     for (let i = 0; i < cart.length; i++) {
                         const item = cart[i];
-                        if (item.design && item.design.id && window.ArtworkStore) {
+                        // Only append binary from IndexedDB if no permanent cloud URL exists (respects Vercel 4.5MB ceiling)
+                        const hasCloudUrl = item.design && item.design.url && item.design.url.startsWith('http');
+                        if (item.design && item.design.id && !hasCloudUrl && window.ArtworkStore) {
                             try {
                                 const rawFile = await window.ArtworkStore.get(item.design.id);
                                 if (rawFile) {

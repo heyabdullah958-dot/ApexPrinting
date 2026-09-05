@@ -31,6 +31,21 @@ router.post('/', contactLimiter, upload.any(), validateContact, checkValidation,
       }
     }
 
+    // Extract cloud-hosted artwork links from cart_data
+    if (cartData && Array.isArray(cartData)) {
+      const cloudItems = cartData.filter(it => it && it.design && it.design.url && (it.design.url.startsWith('http://') || it.design.url.startsWith('https://')));
+      if (cloudItems.length > 0) {
+        const cloudArtworkSummary = cloudItems.map((it, idx) => {
+          const title = it.title || 'Product';
+          const filename = it.design.name || 'artwork';
+          const sizeMB = typeof it.design.size === 'number' ? (it.design.size / (1024 * 1024)).toFixed(2) : '0.00';
+          return `  ${idx + 1}. ${title}: ${filename} (${sizeMB} MB) — ${it.design.url}`;
+        }).join('\n');
+
+        message += `\n\n[Cloud-Hosted Print Artwork (${cloudItems.length})]:\n${cloudArtworkSummary}`;
+      }
+    }
+
     // 1. Insert into Supabase (graceful logging if DB unavailable or placeholder keys)
     try {
       const { error: dbError } = await supabase
