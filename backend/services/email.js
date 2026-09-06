@@ -158,7 +158,7 @@ async function notifyOwnerNewContact(data) {
   if (files.length > 0) {
     mailOptions.attachments = files.map(f => ({
       filename: f.originalname,
-      path: f.path
+      ...(f.buffer ? { content: f.buffer } : (f.path ? { path: f.path } : {}))
     }));
   }
 

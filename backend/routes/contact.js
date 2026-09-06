@@ -5,13 +5,52 @@ const { notifyOwnerNewContact, confirmCustomerContact } = require('../services/e
 const { validateContact, checkValidation } = require('../middleware/validate');
 const { contactLimiter } = require('../middleware/rateLimiter');
 const multer = require('multer');
-const upload = multer({ dest: 'uploads/' });
 
-router.post('/', contactLimiter, upload.any(), validateContact, checkValidation, async (req, res, next) => {
+// Configure multer with memory storage (safe for Vercel/serverless read-only filesystem)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 4.5 * 1024 * 1024, // 4.5MB maximum payload limit for serverless body safety
+    files: 10
+  }
+});
+
+// Middleware to safely handle multer parsing and size boundary violations without unhandled 500s
+const handleUpload = (req, res, next) => {
+  upload.any()(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({
+          success: false,
+          error: 'Attached artwork file exceeds the 4.5MB limit. Please compress or select a smaller file.',
+          message: 'Attached artwork file exceeds the 4.5MB limit. Please compress or select a smaller file.'
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        error: err.message || 'File upload error',
+        message: err.message || 'File upload error'
+      });
+    }
+    next();
+  });
+};
+
+// Health check / GET handler for monitoring and uptime probes
+router.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    service: 'contact_order_api',
+    status: 'operational',
+    timestamp: new Date().toISOString()
+  });
+});
+
+router.post('/', contactLimiter, handleUpload, validateContact, checkValidation, async (req, res, next) => {
   try {
     const { name, email, phone, country, service } = req.body;
     let { message } = req.body;
-    const ip_address = req.ip || req.connection.remoteAddress;
+    const ip_address = req.ip || req.connection?.remoteAddress || 'unknown';
 
     // Collect all uploaded files (cart items + optional contact form file)
     const files = req.files || (req.file ? [req.file] : []);
@@ -80,15 +119,19 @@ router.post('/', contactLimiter, upload.any(), validateContact, checkValidation,
     ]).catch(err => console.error('Email dispatch error in contact route:', err));
 
     // 3. Return standardized API success contract
-    res.json({
+    return res.status(200).json({
       success: true,
       message: "Thank you! Your order request has been received. Our team will contact you within 24 business hours."
     });
 
   } catch (error) {
-    next(error);
+    console.error('Error handling contact submission:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Internal server error occurred while processing your order request.',
+      message: error.message || 'Internal server error occurred while processing your order request.'
+    });
   }
 });
 
 module.exports = router;
-

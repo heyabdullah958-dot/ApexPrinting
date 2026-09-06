@@ -272,9 +272,10 @@ window.uploadArtworkToSupabase = async function(file, onProgress) {
 document.addEventListener('DOMContentLoaded', () => {
     
     // Define backend URL based on environment
-    const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
-        ? 'http://localhost:3000' 
-        : (window.location.origin.includes('vercel.app') ? window.location.origin : 'https://apex-printing.vercel.app');
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const API_BASE_URL = isLocal
+        ? (window.location.port && window.location.port !== '8000' && window.location.port !== '5500' ? window.location.origin : 'http://localhost:3000')
+        : (window.location.origin && window.location.origin.startsWith('http') ? window.location.origin : 'https://apex-printing-seven.vercel.app');
     
     // Set current year in footer
     const yearEl = document.getElementById('year');
@@ -622,11 +623,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const contactForm = document.getElementById('contactForm');
     const formSuccess = document.getElementById('formSuccess');
     const formError = document.getElementById('formError');
+    const fileInput = document.getElementById('design_file');
+    const designFileSizeError = document.getElementById('designFileSizeError');
+    const MAX_ARTWORK_SIZE_BYTES = 4.5 * 1024 * 1024; // 4.5MB ceiling for serverless stability
+
+    // Client-side instant artwork file size check
+    if (fileInput) {
+        fileInput.addEventListener('change', () => {
+            const selectedFile = fileInput.files && fileInput.files[0];
+            if (designFileSizeError) designFileSizeError.style.display = 'none';
+            if (formError) formError.style.display = 'none';
+
+            if (selectedFile) {
+                if (selectedFile.size > MAX_ARTWORK_SIZE_BYTES) {
+                    const sizeMB = (selectedFile.size / (1024 * 1024)).toFixed(1);
+                    const errorMsg = `Selected file "${selectedFile.name}" (${sizeMB}MB) exceeds the 4.5MB limit. Please compress or select a smaller file.`;
+                    
+                    if (designFileSizeError) {
+                        designFileSizeError.textContent = errorMsg;
+                        designFileSizeError.style.display = 'block';
+                    }
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(errorMsg, 'error');
+                    }
+                    fileInput.value = ''; // Reset input to prevent invalid submission
+                }
+            }
+        });
+    }
     
     if (contactForm) {
         contactForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (formError) formError.style.display = 'none';
+            if (designFileSizeError) designFileSizeError.style.display = 'none';
             
             let isValid = true;
             
@@ -675,6 +705,25 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 removeError(message);
             }
+
+            // Validate File Size on submit
+            const designFile = fileInput && fileInput.files ? fileInput.files[0] : null;
+            if (designFile && designFile.size > MAX_ARTWORK_SIZE_BYTES) {
+                const sizeMB = (designFile.size / (1024 * 1024)).toFixed(1);
+                const errorMsg = `Attached artwork "${designFile.name}" (${sizeMB}MB) exceeds the 4.5MB limit. Please select a smaller file.`;
+                if (designFileSizeError) {
+                    designFileSizeError.textContent = errorMsg;
+                    designFileSizeError.style.display = 'block';
+                }
+                if (formError) {
+                    formError.textContent = errorMsg;
+                    formError.style.display = 'block';
+                }
+                if (typeof window.showToast === 'function') {
+                    window.showToast(errorMsg, 'error');
+                }
+                isValid = false;
+            }
             
             if (isValid) {
                 const submitBtn = contactForm.querySelector('button[type="submit"]');
@@ -686,8 +735,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const fullName = `${firstName.value.trim()} ${lastName.value.trim()}`;
                 const phone = document.getElementById('phone') ? document.getElementById('phone').value.trim() : '';
                 const country = document.getElementById('country') ? document.getElementById('country').value : '';
-                const fileInput = document.getElementById('design_file');
-                const designFile = fileInput && fileInput.files ? fileInput.files[0] : null;
                 
                 const formData = new FormData();
                 formData.append('name', fullName);
@@ -726,10 +773,31 @@ document.addEventListener('DOMContentLoaded', () => {
                         body: formData
                     });
 
-                    const data = await response.json();
+                    // Guard response parsing to safely handle non-JSON or platform error pages
+                    const contentType = response.headers.get("content-type") || '';
+                    let result = {};
+                    if (contentType.includes("application/json")) {
+                        try {
+                            result = await response.json();
+                        } catch (parseErr) {
+                            console.error("JSON parse error despite content-type:", parseErr);
+                            result = {};
+                        }
+                    } else {
+                        const text = await response.text();
+                        console.warn("Non-JSON server response received:", response.status, text);
+                        if (response.status === 413 || (text && text.includes("413"))) {
+                            throw new Error("The uploaded file exceeds the 4.5MB server limit. Please upload a smaller file.");
+                        }
+                        throw new Error(
+                            response.status >= 500
+                                ? "Our server is momentarily busy. Please try again in a few moments or email us directly at quotes@apexprinthub.com."
+                                : "Server responded with an unexpected error. Please try again."
+                        );
+                    }
 
-                    if (!response.ok || !data.success) {
-                        throw new Error(data.message || 'Error submitting order request');
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || result.error || 'Error submitting order request');
                     }
 
                     // Reset cart and purge IndexedDB upon successful order request submission
@@ -758,12 +826,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } catch (error) {
                     console.error('Error submitting form:', error);
+                    let displayMsg = error.message || 'There was an error sending your request. Please try again.';
+                    // Cleanse any unhandled JavaScript syntax or token errors from UI
+                    if (displayMsg.includes("JSON") || displayMsg.includes("Unexpected token") || displayMsg.includes("SyntaxError")) {
+                        displayMsg = "A server communication error occurred. Please try again or contact us directly at quotes@apexprinthub.com.";
+                    }
                     if (formError) {
-                        formError.textContent = error.message || 'There was an error sending your request. Please try again.';
+                        formError.textContent = displayMsg;
                         formError.style.display = 'block';
                     }
                     if (typeof window.showToast === 'function') {
-                        window.showToast(error.message || 'Failed to submit order request', 'error');
+                        window.showToast(displayMsg, 'error');
                     }
                 } finally {
                     submitBtn.innerHTML = originalText;

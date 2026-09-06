@@ -55,3 +55,19 @@ This log tracks generalized patterns, wrong assumptions, and root causes across 
      Production systems must never crash when external cloud storage services are slow, misconfigured, or offline. By wrapping client-to-cloud uploads with an automatic fallback to local IndexedDB (`ArtworkStore`), orders can still be constructed, saved, customized, and submitted without failure. On the backend, routes should dynamically inspect whether items contain cloud links or local multipart binaries, supporting both paths transparently.
 - **Applies to**: `script.js`, `backend/routes/contact.js`, `backend/services/email.js`, file upload & storage architectures.
 ---
+
+## Lesson 6 — Serverless Filesystem Boundaries & Defensive API Response Ingestion — 2026-09-06
+- **Pattern**: Running Express API routes and multipart file handlers in serverless function environments (Vercel / AWS Lambda) and consuming responses on client web frontends.
+- **Wrong assumptions made**:
+  1. Assuming `multer({ dest: 'uploads/' })` or `fs.mkdirSync` is benign when defined at module load time.
+  2. Assuming server endpoints always return JSON or that `response.ok` checks can precede `response.json()`.
+  3. Assuming mobile clients won't upload raw high-resolution phone camera photos that exceed serverless gateway payload limits (4.5MB).
+- **What actually mattered**:
+  1. **Serverless Filesystems Are Strictly Read-Only**:
+     In AWS Lambda / Vercel Serverless Functions, `/var/task` is completely immutable. Multer's default disk storage attempts to create directory paths like `uploads/` on the local disk at module import time, throwing `ENOENT` or `EROFS` synchronously. This crashes the serverless runtime during container cold start (`FUNCTION_INVOCATION_FAILED`) before any route handler can execute. Serverless endpoints must exclusively use `multer.memoryStorage()` (or `/tmp` if disk buffering is required).
+  2. **Defensive Response Ingestion on Clients**:
+     Serverless platforms and reverse proxies (Vercel, Cloudflare, AWS CloudFront) intercept fatal crashes, timeouts, and payload violations before they reach user code, returning raw plain text or HTML (e.g. "A server error has occurred", "504 Gateway Time-out", "413 Payload Too Large"). Calling `await response.json()` unconditionally guarantees an unhandled `SyntaxError: Unexpected token 'A' / '<'`. Frontend clients must always inspect `response.headers.get("content-type")`, safely fallback to `.text()`, and translate platform errors into user-friendly guidance.
+  3. **Immediate Client-Side Boundary Enforcers**:
+     Never rely solely on backend gateways to reject oversized payloads. Smartphone cameras produce multi-megabyte JPEGs (5–15MB). Client inputs must validate file size synchronously upon selection (`change` event), clearing the input and alerting the user before any network request is initiated.
+- **Applies to**: `backend/routes/*.js`, `script.js`, any serverless backend routes and frontend form handlers.
+---

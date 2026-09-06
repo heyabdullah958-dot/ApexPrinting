@@ -51,3 +51,21 @@ Initial tracking of project bugs and fixes.
 - **Verification**: Verified via Playwright automated production suite `scripts/test-artwork-flow-production.js` (9 stages passing, 0 broken tabs, zero 413 errors).
 - **Confidence**: 100% — Authoritative end-to-end verification passing.
 ---
+
+## Phase 1 Production Hotfix — Order Submission API Crash & Unhandled JSON Parsing Error — 2026-09-06
+- **Bug 6: Serverless Disk Multer Crash & Unguarded Client JSON Parsing**:
+  - **Symptom**: When a user submitted an order request from `contact.html` after attaching an artwork file (e.g. `IMG-202...037.jpeg`), the submission failed immediately with UI exception toast and red inline error banner: `"Unexpected token 'A', 'A server e'... is not valid JSON"`.
+  - **Root Cause**:
+    1. **Serverless Read-Only Filesystem Violation**: `backend/routes/contact.js` initialized `multer({ dest: 'uploads/' })` and `backend/routes/upload.js` executed `fs.mkdirSync('../uploads/designs')` at top-level module load time. Because AWS Lambda / Vercel Serverless Function filesystem is strictly read-only and `uploads/` is gitignored, the disk storage constructor threw `ENOENT: no such file or directory, mkdir 'uploads/'` synchronously at module import, causing Vercel container cold start to crash with exit status 1 (`FUNCTION_INVOCATION_FAILED`).
+    2. **Raw Plain-Text Serverless Error Page**: Vercel caught the Lambda crash and returned a raw plain text HTTP 500 error body starting with `"A server error has occurred\nFUNCTION_INVOCATION_FAILED"`.
+    3. **Unguarded Frontend JSON Deserialization**: In `script.js`, the contact form handler invoked `const data = await response.json()` without checking `response.headers.get("content-type")`. Passing the raw text `"A server error has occurred..."` into `response.json()` threw JavaScript syntax exception `Unexpected token 'A'`.
+    4. **Unchecked File Size Boundary**: Standalone `#design_file` input had no client-side file size guard, allowing multi-megabyte camera photos from mobile devices to trigger HTTP 413 platform boundaries.
+  - **Fix**:
+    1. **Memory Storage Multer in Serverless**: Converted `backend/routes/contact.js` and `backend/routes/upload.js` to `multer.memoryStorage()`, eliminating disk writes and preventing `ENOENT`/`EROFS` crashes.
+    2. **Safe Upload Middleware & Error Trapping**: Wrapped multer in `handleUpload` middleware that captures `LIMIT_FILE_SIZE` and malformed payloads, returning structured 400 JSON. Wrapped route in exhaustive `try...catch` ensuring guaranteed JSON responses under all fatal errors.
+    3. **Nodemailer Buffer Support**: Updated `backend/services/email.js` to map file attachments from `f.buffer` (`content: f.buffer`) in addition to `f.path`.
+    4. **Client-Side File Size Protection**: Added instant `change` listener and submit validation in `script.js` that checks for the 4.5MB ceiling, clears oversized files, and displays friendly guidance.
+    5. **Guarded Client Response Parsing**: Wrapped `response.headers.get("content-type")` check in `script.js`. Handled non-JSON error pages (including 413 and 500), sanitized error strings, and eliminated raw syntax error traces from toasts and banners.
+  - **Verification**: Verified via `tests/phase1-submission-pipeline.test.js`, `scripts/test-phase1-mobile-submission.js` (Playwright mobile 390x844), and live production deployment at `https://apex-printing-seven.vercel.app/api/contact` (200 OK JSON received).
+  - **Confidence**: 100% — Verified on local suites and live production Vercel infrastructure.
+---
