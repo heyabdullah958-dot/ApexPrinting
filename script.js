@@ -857,8 +857,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (isNetworkErr) {
                         displayMsg = "Unable to connect to the server. Please check your internet connection and try again.";
-                    } else if (displayMsg.includes("JSON") || displayMsg.includes("Unexpected token") || displayMsg.includes("SyntaxError")) {
-                        displayMsg = "A server communication error occurred. Please try again or contact us directly at quotes@apexprinthub.com.";
+                    } else if (
+                        displayMsg.includes("JSON") || 
+                        displayMsg.includes("Unexpected token") || 
+                        displayMsg.includes("SyntaxError") ||
+                        displayMsg.includes("is not valid") ||
+                        displayMsg.includes("token 'A'") ||
+                        displayMsg.includes("A server error")
+                    ) {
+                        displayMsg = "The server experienced a momentary issue processing the request. Please verify your file size is under 4.5MB and try again, or email us at quotes@apexprinthub.com.";
                     }
                     
                     if (formError) {
