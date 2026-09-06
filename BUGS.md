@@ -69,3 +69,23 @@ Initial tracking of project bugs and fixes.
   - **Verification**: Verified via `tests/phase1-submission-pipeline.test.js`, `scripts/test-phase1-mobile-submission.js` (Playwright mobile 390x844), and live production deployment at `https://apex-printing-seven.vercel.app/api/contact` (200 OK JSON received).
   - **Confidence**: 100% — Verified on local suites and live production Vercel infrastructure.
 ---
+
+## Phase 1 Production Deep Hardening — Order Submission & Serverless Resilience Audit — 2026-09-06
+- **Bug 7: Cumulative Payload Bypass, Serverless SMTP Freezing, and Unfiltered File Uploads**:
+  - **Symptom**: 
+    1. Submissions with cart items from IndexedDB combined with artwork files bypassed individual 4.5MB checks and exceeded Vercel's body ceiling.
+    2. Background transactional emails risked being terminated in-flight because promises were unawaited before serverless container freeze.
+    3. Unbounded file extensions permitted non-print executables to reach memory storage.
+    4. Mobile contact form fields squeezed into side-by-side columns due to un-responsive inline styles.
+    5. Network disconnection threw raw browser `Failed to fetch` error message.
+  - **Fix**:
+    1. Added cumulative artwork size calculation across both `#design_file` and IndexedDB `cart_artworks` in `script.js` before dispatch.
+    2. Enforced 4.5MB ceiling in modal uploads and artwork swaps when cloud storage is unconfigured.
+    3. Awaited dual email dispatch with a 4-second race timeout and fast Nodemailer socket timeouts (4s connection / 5s socket), ensuring emails are dispatched before serverless runtime freeze without exceeding Vercel's 10s gateway timeout.
+    4. Implemented `fileFilter` in `backend/routes/contact.js` to restrict uploads strictly to supported design formats (`.jpg`, `.png`, `.webp`, `.svg`, `.pdf`, `.ai`, `.psd`, `.eps`, `.tiff`, `.zip`).
+    5. Replaced inline grid styles with responsive `.form-row` in `contact.html` for single-column mobile stacking.
+    6. Sanitized network disconnect / TypeError errors into friendly connectivity guidance.
+    7. Increased `express.json()` and `express.urlencoded()` limits to 10MB to prevent premature 413s on large cart specs.
+    8. Added `if (res.headersSent) return next(err);` in `backend/middleware/errorHandler.js` to prevent fatal header-sent crashes.
+  - **Verification**: Verified via expanded 10-test suite `tests/phase1-submission-pipeline.test.js`, Playwright mobile test `scripts/test-phase1-mobile-submission.js`, and live 3-stage production probe `scripts/test-production-live-submission.js` against `https://apex-printing-seven.vercel.app` (200 OK image, 413 oversized, 400 invalid format .exe all passing).
+  - **Confidence**: 100% — Tested locally and verified on live deployed Vercel infrastructure.

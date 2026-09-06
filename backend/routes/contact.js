@@ -6,34 +6,60 @@ const { validateContact, checkValidation } = require('../middleware/validate');
 const { contactLimiter } = require('../middleware/rateLimiter');
 const multer = require('multer');
 
+// Supported artwork file extensions for print production
+const ALLOWED_ARTWORK_EXTENSIONS = /\.(jpe?g|png|gif|webp|svg|pdf|ai|psd|eps|tiff?|zip)$/i;
+
 // Configure multer with memory storage (safe for Vercel/serverless read-only filesystem)
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 4.5 * 1024 * 1024, // 4.5MB maximum payload limit for serverless body safety
     files: 10
+  },
+  fileFilter: (req, file, cb) => {
+    if (!file.originalname || !file.originalname.match(ALLOWED_ARTWORK_EXTENSIONS)) {
+      const err = new Error('Unsupported file format. Please upload an image (JPG, PNG, WEBP, SVG), PDF, AI, PSD, EPS, or ZIP file.');
+      err.code = 'INVALID_FILE_TYPE';
+      return cb(err);
+    }
+    cb(null, true);
   }
 });
 
 // Middleware to safely handle multer parsing and size boundary violations without unhandled 500s
 const handleUpload = (req, res, next) => {
-  upload.any()(req, res, (err) => {
-    if (err) {
-      if (err.code === 'LIMIT_FILE_SIZE') {
+  try {
+    upload.any()(req, res, (err) => {
+      if (err) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({
+            success: false,
+            error: 'Attached artwork file exceeds the 4.5MB limit. Please compress or select a smaller file.',
+            message: 'Attached artwork file exceeds the 4.5MB limit. Please compress or select a smaller file.'
+          });
+        }
+        if (err.code === 'INVALID_FILE_TYPE') {
+          return res.status(400).json({
+            success: false,
+            error: err.message,
+            message: err.message
+          });
+        }
         return res.status(400).json({
           success: false,
-          error: 'Attached artwork file exceeds the 4.5MB limit. Please compress or select a smaller file.',
-          message: 'Attached artwork file exceeds the 4.5MB limit. Please compress or select a smaller file.'
+          error: err.message || 'File upload error',
+          message: err.message || 'File upload error'
         });
       }
-      return res.status(400).json({
-        success: false,
-        error: err.message || 'File upload error',
-        message: err.message || 'File upload error'
-      });
-    }
-    next();
-  });
+      next();
+    });
+  } catch (syncErr) {
+    return res.status(400).json({
+      success: false,
+      error: syncErr.message || 'Malformed upload payload',
+      message: syncErr.message || 'Malformed upload payload'
+    });
+  }
 };
 
 // Health check / GET handler for monitoring and uptime probes
@@ -48,23 +74,25 @@ router.get('/', (req, res) => {
 
 router.post('/', contactLimiter, handleUpload, validateContact, checkValidation, async (req, res, next) => {
   try {
-    const { name, email, phone, country, service } = req.body;
-    let { message } = req.body;
+    const body = req.body || {};
+    const { name, email, phone, country, service } = body;
+    let message = typeof body.message === 'string' ? body.message.trim() : '';
     const ip_address = req.ip || req.connection?.remoteAddress || 'unknown';
 
     // Collect all uploaded files (cart items + optional contact form file)
     const files = req.files || (req.file ? [req.file] : []);
 
     if (files.length > 0) {
-      message += `\n\n[Attached Artwork & Files (${files.length})]:\n` + 
+      const fileSummary = `\n\n[Attached Artwork & Files (${files.length})]:\n` + 
         files.map((f, idx) => `  ${idx + 1}. ${f.originalname} (${(f.size / 1024).toFixed(0)} KB)`).join('\n');
+      message = message ? `${message}${fileSummary}` : fileSummary.trim();
     }
 
     // Parse optional cart data if submitted
     let cartData = null;
-    if (req.body.cart_data) {
+    if (body.cart_data) {
       try {
-        cartData = typeof req.body.cart_data === 'string' ? JSON.parse(req.body.cart_data) : req.body.cart_data;
+        cartData = typeof body.cart_data === 'string' ? JSON.parse(body.cart_data) : body.cart_data;
       } catch (parseErr) {
         console.warn('⚠️ Could not parse cart_data payload:', parseErr.message);
       }
@@ -81,7 +109,8 @@ router.post('/', contactLimiter, handleUpload, validateContact, checkValidation,
           return `  ${idx + 1}. ${title}: ${filename} (${sizeMB} MB) — ${it.design.url}`;
         }).join('\n');
 
-        message += `\n\n[Cloud-Hosted Print Artwork (${cloudItems.length})]:\n${cloudArtworkSummary}`;
+        const cloudSection = `\n\n[Cloud-Hosted Print Artwork (${cloudItems.length})]:\n${cloudArtworkSummary}`;
+        message = message ? `${message}${cloudSection}` : cloudSection.trim();
       }
     }
 
@@ -100,7 +129,7 @@ router.post('/', contactLimiter, handleUpload, validateContact, checkValidation,
       console.warn('⚠️ Supabase connection warning (contact):', dbErr.message);
     }
 
-    // 2. Dual-recipient email dispatch asynchronously (non-blocking)
+    // 2. Dual-recipient email dispatch with timeout protection (ensures delivery before serverless freeze)
     const emailData = { 
       name, 
       email, 
@@ -113,10 +142,20 @@ router.post('/', contactLimiter, handleUpload, validateContact, checkValidation,
       cartData 
     };
 
-    Promise.allSettled([
-      notifyOwnerNewContact(emailData),
-      confirmCustomerContact(emailData)
-    ]).catch(err => console.error('Email dispatch error in contact route:', err));
+    // Await email dispatch with a 4-second race timeout so serverless runtime does not freeze before sending,
+    // while guaranteeing the request finishes well within Vercel's 10s execution window.
+    const emailTimeout = new Promise(resolve => setTimeout(() => resolve('email_timeout'), 4000));
+    try {
+      await Promise.race([
+        Promise.allSettled([
+          notifyOwnerNewContact(emailData),
+          confirmCustomerContact(emailData)
+        ]),
+        emailTimeout
+      ]);
+    } catch (emailErr) {
+      console.warn('⚠️ Email dispatch notification warning:', emailErr.message);
+    }
 
     // 3. Return standardized API success contract
     return res.status(200).json({

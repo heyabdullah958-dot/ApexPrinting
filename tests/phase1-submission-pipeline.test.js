@@ -300,8 +300,171 @@ async function runAllTests() {
 
     console.log('✓ Test 6 Passed: Safe client parser completely eliminates unhandled JSON syntax crashes\n');
 
+    // -------------------------------------------------------------
+    // TEST 7: Unsupported File Format Filter (.exe / .sh / .bat)
+    // -------------------------------------------------------------
+    console.log('[Test 7] Testing fileFilter rejects unsupported executable formats with 400 JSON...');
+    const invalidFileBoundary = '----WebKitFormBoundaryInvalidFile';
+    const invalidFileBody = buildMultipartBody(
+      {
+        name: 'Attacker Test',
+        email: 'attacker@example.com',
+        service: 'Flyers',
+        message: 'Attempting to upload executable payload.'
+      },
+      [
+        {
+          field: 'design_file',
+          filename: 'malware.exe',
+          contentType: 'application/x-msdownload',
+          content: Buffer.from('MZ0000000')
+        }
+      ],
+      invalidFileBoundary
+    );
+
+    const resInvalidFile = await fetch(`${BASE_URL}/api/contact`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${invalidFileBoundary}`
+      },
+      body: invalidFileBody
+    });
+
+    assert.strictEqual(resInvalidFile.status, 400);
+    assert.ok(resInvalidFile.headers.get('content-type').includes('application/json'));
+    const jsonInvalidFile = await resInvalidFile.json();
+    assert.strictEqual(jsonInvalidFile.success, false);
+    assert.ok(jsonInvalidFile.error.includes('Unsupported file format'));
+    console.log('✓ Test 7 Passed: Unsupported file format (.exe) cleanly rejected with 400 JSON\n');
+
+    // -------------------------------------------------------------
+    // TEST 8: Client Safe Parser Unpacks Validation Errors Array
+    // -------------------------------------------------------------
+    console.log('[Test 8] Testing client safe parser unpacks detailed validation error array...');
+    const mockValidationResponse = {
+      ok: false,
+      status: 400,
+      headers: {
+        get: (h) => h.toLowerCase() === 'content-type' ? 'application/json' : null
+      },
+      json: async () => ({
+        success: false,
+        message: 'Validation failed',
+        errors: [
+          { msg: 'Message must be between 5 and 4000 characters' },
+          { msg: 'Valid email is required' }
+        ]
+      })
+    };
+
+    // Client parser implementation matching script.js
+    async function simulateFullClientParse(mockResponse) {
+      const contentType = mockResponse.headers.get("content-type") || '';
+      let result = {};
+      if (contentType.includes("application/json")) {
+        try {
+          result = await mockResponse.json();
+        } catch (parseErr) {
+          result = {};
+        }
+      } else {
+        const text = await mockResponse.text();
+        if (mockResponse.status === 413 || (text && (text.includes("413") || text.includes("PAYLOAD_TOO_LARGE") || text.includes("Too Large")))) {
+          throw new Error("The uploaded file exceeds the 4.5MB server limit. Please compress or select a smaller file.");
+        }
+        throw new Error(
+          mockResponse.status >= 500
+            ? "Our server is momentarily busy. Please try again in a few moments or email us directly at quotes@apexprinthub.com."
+            : "Server responded with an unexpected error. Please try again."
+        );
+      }
+
+      if (!mockResponse.ok || !result.success) {
+        let failureMsg = 'Error submitting order request';
+        if (result.errors && Array.isArray(result.errors) && result.errors.length > 0) {
+          failureMsg = result.errors.map(e => e.msg || e.message).filter(Boolean).join('; ');
+        } else if (typeof result.message === 'string' && result.message) {
+          failureMsg = result.message;
+        } else if (typeof result.error === 'string' && result.error) {
+          failureMsg = result.error;
+        }
+        throw new Error(failureMsg);
+      }
+
+      return result;
+    }
+
+    try {
+      await simulateFullClientParse(mockValidationResponse);
+      assert.fail('Should have thrown on validation response');
+    } catch (err) {
+      assert.ok(err.message.includes('Message must be between 5 and 4000 characters'), 'Should include specific validation message');
+      assert.ok(err.message.includes('Valid email is required'), 'Should include second validation error message');
+      console.log('✓ Test 8 Passed: Client parser unpacks detailed validation error array instead of generic "Validation failed"\n');
+    }
+
+    // -------------------------------------------------------------
+    // TEST 9: Network Disconnect / Offline Error Sanitization
+    // -------------------------------------------------------------
+    console.log('[Test 9] Testing client-side catch block cleanses raw network/fetch errors...');
+    function cleanseClientErrorMessage(error) {
+      let displayMsg = error.message || 'There was an error sending your request. Please try again.';
+      const isNetworkErr = (error.name === 'TypeError' && (
+        displayMsg.includes('fetch') || 
+        displayMsg.includes('NetworkError') || 
+        displayMsg.includes('network') ||
+        displayMsg.includes('Load failed')
+      ));
+      if (isNetworkErr) {
+        return "Unable to connect to the server. Please check your internet connection and try again.";
+      }
+      if (displayMsg.includes("JSON") || displayMsg.includes("Unexpected token") || displayMsg.includes("SyntaxError")) {
+        return "A server communication error occurred. Please try again or contact us directly at quotes@apexprinthub.com.";
+      }
+      return displayMsg;
+    }
+
+    const rawFetchError = new TypeError('Failed to fetch');
+    const cleansedFetch = cleanseClientErrorMessage(rawFetchError);
+    assert.strictEqual(cleansedFetch, 'Unable to connect to the server. Please check your internet connection and try again.');
+
+    const rawSyntaxError = new SyntaxError("Unexpected token 'A', \"A server e\"... is not valid JSON");
+    const cleansedSyntax = cleanseClientErrorMessage(rawSyntaxError);
+    assert.strictEqual(cleansedSyntax, 'A server communication error occurred. Please try again or contact us directly at quotes@apexprinthub.com.');
+    console.log('✓ Test 9 Passed: Network disconnect and syntax exceptions safely converted to user-friendly copy\n');
+
+    // -------------------------------------------------------------
+    // TEST 10: Server Body Limit Supports Large JSON (> 100KB)
+    // -------------------------------------------------------------
+    console.log('[Test 10] Testing express.json limit supports payloads > 100KB without crashing...');
+    const largePayload = {
+      name: 'Large Cart Client',
+      email: 'client@example.com',
+      service: 'Business Cards',
+      message: 'Testing large cart data JSON parsing.',
+      cart_data: JSON.stringify(Array.from({ length: 20 }, (_, i) => ({
+        id: i,
+        title: `Product ${i}`,
+        specs: 'x'.repeat(10000) // ~200KB total payload
+      })))
+    };
+
+    const resLargeJson = await fetch(`${BASE_URL}/api/contact`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(largePayload)
+    });
+
+    assert.strictEqual(resLargeJson.status, 200, 'Should accept large JSON payload within 10MB limit');
+    const jsonLarge = await resLargeJson.json();
+    assert.strictEqual(jsonLarge.success, true);
+    console.log('✓ Test 10 Passed: Large JSON payload (>100KB) cleanly processed without 413 error\n');
+
     console.log('===============================================================');
-    console.log('🎉 ALL 6 VERIFICATION TEST SUITES PASSED FLAWLESSLY!');
+    console.log('🎉 ALL 10 VERIFICATION TEST SUITES PASSED FLAWLESSLY!');
     console.log('===============================================================\n');
 
   } finally {

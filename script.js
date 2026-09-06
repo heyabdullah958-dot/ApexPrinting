@@ -706,11 +706,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 removeError(message);
             }
 
-            // Validate File Size on submit
+            // Validate Cumulative File Size on submit (design_file + cart_artworks from IndexedDB)
             const designFile = fileInput && fileInput.files ? fileInput.files[0] : null;
-            if (designFile && designFile.size > MAX_ARTWORK_SIZE_BYTES) {
-                const sizeMB = (designFile.size / (1024 * 1024)).toFixed(1);
-                const errorMsg = `Attached artwork "${designFile.name}" (${sizeMB}MB) exceeds the 4.5MB limit. Please select a smaller file.`;
+            let totalArtworkBytes = designFile ? designFile.size : 0;
+            const pendingCartFiles = [];
+
+            if (typeof cart !== 'undefined' && cart.length > 0 && window.ArtworkStore) {
+                for (let i = 0; i < cart.length; i++) {
+                    const item = cart[i];
+                    const hasCloudUrl = item.design && item.design.url && item.design.url.startsWith('http');
+                    if (item.design && item.design.id && !hasCloudUrl) {
+                        try {
+                            const rawFile = await window.ArtworkStore.get(item.design.id);
+                            if (rawFile) {
+                                totalArtworkBytes += rawFile.size;
+                                pendingCartFiles.push({ name: rawFile.name || item.design.name, file: rawFile });
+                            }
+                        } catch (storeErr) {
+                            console.warn('Could not inspect artwork size from IndexedDB:', storeErr);
+                        }
+                    }
+                }
+            }
+
+            if (totalArtworkBytes > MAX_ARTWORK_SIZE_BYTES) {
+                const sizeMB = (totalArtworkBytes / (1024 * 1024)).toFixed(1);
+                const errorMsg = `Total attached artwork size (${sizeMB}MB) exceeds the 4.5MB limit for direct submission. Please compress your files or select smaller files.`;
                 if (designFileSizeError) {
                     designFileSizeError.textContent = errorMsg;
                     designFileSizeError.style.display = 'block';
@@ -747,24 +768,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append('design_file', designFile);
                 }
 
-                // Append itemized cart data and binary artworks from IndexedDB (fallback only)
+                // Append itemized cart data and pre-fetched binary artworks from IndexedDB
                 if (typeof cart !== 'undefined' && cart.length > 0) {
                     formData.append('cart_data', JSON.stringify(cart));
-                    for (let i = 0; i < cart.length; i++) {
-                        const item = cart[i];
-                        // Only append binary from IndexedDB if no permanent cloud URL exists (respects Vercel 4.5MB ceiling)
-                        const hasCloudUrl = item.design && item.design.url && item.design.url.startsWith('http');
-                        if (item.design && item.design.id && !hasCloudUrl && window.ArtworkStore) {
-                            try {
-                                const rawFile = await window.ArtworkStore.get(item.design.id);
-                                if (rawFile) {
-                                    formData.append('cart_artworks', rawFile, rawFile.name || item.design.name);
-                                }
-                            } catch (storeErr) {
-                                console.warn('Could not read artwork from IndexedDB for item:', item.title, storeErr);
-                            }
-                        }
-                    }
+                    pendingCartFiles.forEach(cf => {
+                        formData.append('cart_artworks', cf.file, cf.name);
+                    });
                 }
 
                 try {
@@ -786,8 +795,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         const text = await response.text();
                         console.warn("Non-JSON server response received:", response.status, text);
-                        if (response.status === 413 || (text && text.includes("413"))) {
-                            throw new Error("The uploaded file exceeds the 4.5MB server limit. Please upload a smaller file.");
+                        if (response.status === 413 || (text && (text.includes("413") || text.includes("PAYLOAD_TOO_LARGE") || text.includes("Too Large")))) {
+                            throw new Error("The uploaded file exceeds the 4.5MB server limit. Please compress or select a smaller file.");
                         }
                         throw new Error(
                             response.status >= 500
@@ -797,7 +806,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     if (!response.ok || !result.success) {
-                        throw new Error(result.message || result.error || 'Error submitting order request');
+                        let failureMsg = 'Error submitting order request';
+                        if (result.errors && Array.isArray(result.errors) && result.errors.length > 0) {
+                            failureMsg = result.errors.map(e => e.msg || e.message).filter(Boolean).join('; ');
+                        } else if (typeof result.message === 'string' && result.message) {
+                            failureMsg = result.message;
+                        } else if (typeof result.error === 'string' && result.error) {
+                            failureMsg = result.error;
+                        } else if (result.error && typeof result.error.message === 'string') {
+                            failureMsg = result.error.message;
+                        }
+                        throw new Error(failureMsg);
                     }
 
                     // Reset cart and purge IndexedDB upon successful order request submission
@@ -827,10 +846,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (error) {
                     console.error('Error submitting form:', error);
                     let displayMsg = error.message || 'There was an error sending your request. Please try again.';
-                    // Cleanse any unhandled JavaScript syntax or token errors from UI
-                    if (displayMsg.includes("JSON") || displayMsg.includes("Unexpected token") || displayMsg.includes("SyntaxError")) {
+                    
+                    // Network disconnect or fetch failure sanitization
+                    const isNetworkErr = (error.name === 'TypeError' && (
+                        displayMsg.includes('fetch') || 
+                        displayMsg.includes('NetworkError') || 
+                        displayMsg.includes('network') ||
+                        displayMsg.includes('Load failed')
+                    )) || (typeof navigator !== 'undefined' && !navigator.onLine);
+                    
+                    if (isNetworkErr) {
+                        displayMsg = "Unable to connect to the server. Please check your internet connection and try again.";
+                    } else if (displayMsg.includes("JSON") || displayMsg.includes("Unexpected token") || displayMsg.includes("SyntaxError")) {
                         displayMsg = "A server communication error occurred. Please try again or contact us directly at quotes@apexprinthub.com.";
                     }
+                    
                     if (formError) {
                         formError.textContent = displayMsg;
                         formError.style.display = 'block';
@@ -1980,12 +2010,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const MAX_SIZE = 50 * 1024 * 1024;
+            const SUPABASE_URL = (typeof window !== 'undefined' && window.SUPABASE_URL) ? window.SUPABASE_URL : '';
+            const isCloudConfigured = SUPABASE_URL && !SUPABASE_URL.includes('placeholder') && !SUPABASE_URL.includes('your-project');
+            const MAX_SIZE = isCloudConfigured ? 50 * 1024 * 1024 : 4.5 * 1024 * 1024;
+            const limitLabel = isCloudConfigured ? '50MB' : '4.5MB';
+
             if (file.size > MAX_SIZE) {
                 if (typeof window.showToast === 'function') {
-                    window.showToast('File size exceeds 50MB limit. Please select a smaller file.', 'error');
+                    window.showToast(`File size exceeds ${limitLabel} limit. Please select a smaller file.`, 'error');
                 } else {
-                    alert('File size exceeds 50MB limit. Please select a smaller file.');
+                    alert(`File size exceeds ${limitLabel} limit. Please select a smaller file.`);
                 }
                 uploadInput.value = '';
                 previewContainer.style.display = 'none';
@@ -2126,9 +2160,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     const fileInput = document.getElementById('modal_design_file');
                     if (!uploadedDesign && fileInput && fileInput.files && fileInput.files[0]) {
                         const file = fileInput.files[0];
-                        const MAX_SIZE = 50 * 1024 * 1024;
+                        const SUPABASE_URL = (typeof window !== 'undefined' && window.SUPABASE_URL) ? window.SUPABASE_URL : '';
+                        const isCloudConfigured = SUPABASE_URL && !SUPABASE_URL.includes('placeholder') && !SUPABASE_URL.includes('your-project');
+                        const MAX_SIZE = isCloudConfigured ? 50 * 1024 * 1024 : 4.5 * 1024 * 1024;
+                        const limitLabel = isCloudConfigured ? '50MB' : '4.5MB';
+
                         if (file.size > MAX_SIZE) {
-                            window.showToast('File size exceeds 50MB limit.', 'error');
+                            window.showToast(`File size exceeds ${limitLabel} limit. Please compress or select a smaller file.`, 'error');
                             submitBtn.textContent = originalBtnText;
                             submitBtn.disabled = false;
                             return;
@@ -2625,9 +2663,14 @@ window.triggerArtworkSwap = function(index) {
 
         if (!file || !cart || !cart[index]) return;
 
-        if (file.size > 50 * 1024 * 1024) {
+        const SUPABASE_URL = (typeof window !== 'undefined' && window.SUPABASE_URL) ? window.SUPABASE_URL : '';
+        const isCloudConfigured = SUPABASE_URL && !SUPABASE_URL.includes('placeholder') && !SUPABASE_URL.includes('your-project');
+        const MAX_SWAP_SIZE = isCloudConfigured ? 50 * 1024 * 1024 : 4.5 * 1024 * 1024;
+
+        if (file.size > MAX_SWAP_SIZE) {
+            const limitLabel = isCloudConfigured ? '50MB' : '4.5MB';
             if (typeof window.showToast === 'function') {
-                window.showToast('File size exceeds 50MB limit.', 'error');
+                window.showToast(`File size exceeds ${limitLabel} limit. Please compress or select a smaller file.`, 'error');
             }
             return;
         }

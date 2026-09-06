@@ -7,10 +7,11 @@ const { contactLimiter } = require('../middleware/rateLimiter');
 
 router.post('/', contactLimiter, validateQuote, checkValidation, async (req, res, next) => {
   try {
+    const body = req.body || {};
     const { 
       name, email, phone, country, service, 
       quantity, size, paper_type, finishing, sides, artwork_ready, notes 
-    } = req.body;
+    } = body;
 
     const quoteData = {
       name, email, phone, country, service,
@@ -31,14 +32,22 @@ router.post('/', contactLimiter, validateQuote, checkValidation, async (req, res
       console.warn('⚠️ Supabase connection warning (quote):', dbErr.message);
     }
 
-    // 2. Dual-recipient email dispatch asynchronously (non-blocking)
-    Promise.allSettled([
-      notifyOwnerNewQuote(quoteData),
-      confirmCustomerQuote(quoteData)
-    ]).catch(err => console.error('Email dispatch error in quote route:', err));
+    // 2. Dual-recipient email dispatch with timeout protection (ensures delivery before serverless freeze)
+    const emailTimeout = new Promise(resolve => setTimeout(() => resolve('email_timeout'), 4000));
+    try {
+      await Promise.race([
+        Promise.allSettled([
+          notifyOwnerNewQuote(quoteData),
+          confirmCustomerQuote(quoteData)
+        ]),
+        emailTimeout
+      ]);
+    } catch (emailErr) {
+      console.warn('⚠️ Email dispatch notification warning (quote):', emailErr.message);
+    }
 
     // 3. Return standardized API success contract
-    res.json({
+    return res.status(200).json({
       success: true,
       message: "Thank you! Your quote request has been received. Our team will contact you shortly with custom pricing and specifications."
     });

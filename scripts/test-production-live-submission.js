@@ -93,6 +93,43 @@ async function testLivePost() {
   }
   console.log('✓ Test 2: Live production handled oversized payload gracefully without server crash!\n');
 
+  console.log('--- TEST 3: LIVE PRODUCTION POST /api/contact WITH UNSUPPORTED FILE (.exe) ---');
+  const invalidBoundary = '----WebKitFormBoundaryInvalidLive';
+  const invalidParts = [];
+  for (const [k, v] of Object.entries(fields)) {
+    invalidParts.push(Buffer.from(
+      `--${invalidBoundary}${crlf}` +
+      `Content-Disposition: form-data; name="${k}"${crlf}${crlf}` +
+      `${v}${crlf}`
+    ));
+  }
+  invalidParts.push(Buffer.from(
+    `--${invalidBoundary}${crlf}` +
+    `Content-Disposition: form-data; name="design_file"; filename="payload.exe"${crlf}` +
+    `Content-Type: application/octet-stream${crlf}${crlf}`
+  ));
+  invalidParts.push(Buffer.from('MZ9000'));
+  invalidParts.push(Buffer.from(crlf));
+  invalidParts.push(Buffer.from(`--${invalidBoundary}--${crlf}`));
+
+  const resInvalid = await fetch('https://apex-printing-seven.vercel.app/api/contact', {
+    method: 'POST',
+    headers: { 'Content-Type': `multipart/form-data; boundary=${invalidBoundary}` },
+    body: Buffer.concat(invalidParts)
+  });
+
+  console.log('Invalid Format Status:', resInvalid.status);
+  console.log('Invalid Format Content-Type:', resInvalid.headers.get('content-type'));
+  const invalidText = await resInvalid.text();
+  console.log('Invalid Format Body:', invalidText);
+
+  assert.strictEqual(resInvalid.status, 400);
+  assert.ok(resInvalid.headers.get('content-type').includes('application/json'));
+  const invalidJson = JSON.parse(invalidText);
+  assert.strictEqual(invalidJson.success, false);
+  assert.ok(invalidJson.error.includes('Unsupported file format'));
+  console.log('✓ Test 3: Live production rejected unsupported executable file (.exe) with clean 400 JSON!\n');
+
   console.log('===============================================================');
   console.log('🎉 ALL LIVE PRODUCTION VERIFICATIONS PASSED 100%!');
   console.log('===============================================================');

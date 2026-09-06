@@ -71,3 +71,18 @@ This log tracks generalized patterns, wrong assumptions, and root causes across 
      Never rely solely on backend gateways to reject oversized payloads. Smartphone cameras produce multi-megabyte JPEGs (5–15MB). Client inputs must validate file size synchronously upon selection (`change` event), clearing the input and alerting the user before any network request is initiated.
 - **Applies to**: `backend/routes/*.js`, `script.js`, any serverless backend routes and frontend form handlers.
 ---
+
+## Lesson 7 — Cumulative Payload Size Enforcers & Serverless Lifecycle Pitfalls — 2026-09-06
+- **Pattern**: Validating compound multi-item form payloads (cart items + single attachments) and managing asynchronous side-effects (emails, logs) in serverless runtime environments.
+- **Wrong assumptions made**:
+  1. Assuming validating an individual `<input type="file">` prevents payload limit violations when hidden cart attachments or multiple files exist.
+  2. Assuming `Promise.allSettled` runs to completion in serverless functions without being `await`ed before sending the HTTP response.
+  3. Assuming `errorHandler` in Express can safely format errors without checking `res.headersSent`.
+- **What actually mattered**:
+  1. **Cumulative Multipart Body Calculation**:
+     Validating `fileInput.files[0].size <= 4.5MB` is insufficient if other attachments (e.g. cart items from IndexedDB) are appended to `FormData`. The client must calculate the cumulative sum of ALL files being appended before dispatching the request.
+  2. **Serverless Execution Context Freezing**:
+     In serverless platforms (Vercel / AWS Lambda), the runtime process is immediately suspended or frozen once the HTTP response is sent. Background promises (such as email dispatch) dispatched without `await` are killed in flight. Asynchronous tasks must be `await`ed before responding, paired with a fast race timeout (e.g. 4 seconds) to guarantee completion within the platform's execution ceiling.
+  3. **Double-Header Send Prevention**:
+     Always include `if (res.headersSent) return next(err);` in top-level error handlers. If an error occurs after response streaming has begun, attempting `res.status().json()` triggers a fatal Node.js runtime exception (`ERR_HTTP_HEADERS_SENT`).
+- **Applies to**: `script.js`, `backend/routes/contact.js`, `backend/routes/quote.js`, `backend/middleware/errorHandler.js`.

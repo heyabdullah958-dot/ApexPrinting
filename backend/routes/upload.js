@@ -5,8 +5,10 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
+const isServerlessOrProd = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NODE_ENV === 'production';
+
 // Ensure upload directory exists (fallback to /tmp in serverless/Vercel)
-const uploadDir = process.env.VERCEL 
+const uploadDir = isServerlessOrProd 
   ? path.join(os.tmpdir(), 'uploads', 'designs') 
   : path.join(__dirname, '../uploads/designs');
 
@@ -18,8 +20,8 @@ try {
   console.warn('⚠️ Could not create uploadDir:', err.message);
 }
 
-// Configure multer storage (memoryStorage in serverless, diskStorage in local dev)
-const storage = process.env.VERCEL 
+// Configure multer storage (memoryStorage in serverless/prod, diskStorage in local dev)
+const storage = isServerlessOrProd 
   ? multer.memoryStorage() 
   : multer.diskStorage({
       destination: function (req, file, cb) {
