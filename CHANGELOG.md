@@ -136,7 +136,10 @@ Initial tracking of project changes.
   - Completely hides `.thumbnail-row` (`display: none`) for single-image catalog items or when `!pdfPath` or `totalPages <= 1`, eliminating duplicate single-thumbnail mosaic boxes.
   - Multi-page PDF thumbnail canvases now render at 140x110 (2x DPR), and main PDF pages render at 2.0 scale with `imageSmoothingQuality = 'high'`.
   - Added hardware acceleration (`transform: translate3d(0, 30px, 0); will-change: transform, opacity; backface-visibility: hidden;`) to `.modal-content` and fixed `.thumbnail` flex sizing to `flex: 0 0 70px; width: 70px; height: 55px;`.
-- **Verification**:
+- **Verification & Review Hardening**:
   - Verified via `tests/unit-email-contact.test.js` (5/5 passing), `tests/phase1-submission-pipeline.test.js` (10/10 passing), and `tests/email-delivery-failure.test.js` (4/4 passing).
-  - Verified via Playwright automated tests on mobile (390x844) and desktop (1440x900).
+  - Verified via Playwright automated tests on mobile (390x844) and desktop (1440x900) (`scripts/verify-fixes.js`).
+  - Added SMTP credentials to Vercel production environment variables, deployed via Vercel CLI, and verified live production `POST /api/quote` and `POST /api/contact` returning HTTP 200 with `customerEmailSent: true` on `https://apex-printing-seven.vercel.app`.
+  - Removed `-webkit-optimize-contrast` from CSS to eliminate nearest-neighbor pixelation, resolved PDF.js canvas double-render race condition, and cleaned up static dummy thumbnails.
+
 
