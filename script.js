@@ -1715,26 +1715,10 @@ async function loadPDFGallery(pdfPath, sourceCanvas) {
     
     thumbnailRow.innerHTML = '';
     
+    // If no PDF path or pdfjsLib not loaded, cleanly hide the thumbnail row
+    // (Single-image items should never display a duplicate low-res thumbnail box)
     if (!pdfPath || typeof pdfjsLib === 'undefined') {
-        const thumb = document.createElement('div');
-        thumb.className = 'thumbnail active';
-        if (sourceCanvas) {
-            const canvasCopy = document.createElement('canvas');
-            canvasCopy.width = 50;
-            canvasCopy.height = 50;
-            const ctx = canvasCopy.getContext('2d');
-            if (sourceCanvas && sourceCanvas.getContext) {
-                ctx.drawImage(sourceCanvas, 0, 0, 50, 50);
-            } else if (typeof sourceCanvas === 'string' || (sourceCanvas && sourceCanvas.tagName === 'IMG')) {
-                const img = new Image();
-                img.onload = () => ctx.drawImage(img, 0, 0, 50, 50);
-                img.src = typeof sourceCanvas === 'string' ? sourceCanvas : sourceCanvas.src;
-            }
-            thumb.appendChild(canvasCopy);
-        } else {
-            thumb.textContent = 'Page 1';
-        }
-        thumbnailRow.appendChild(thumb);
+        thumbnailRow.style.display = 'none';
         return;
     }
     
@@ -1742,6 +1726,33 @@ async function loadPDFGallery(pdfPath, sourceCanvas) {
         const loadingTask = pdfjsLib.getDocument(pdfPath);
         const pdf = await loadingTask.promise;
         const totalPages = pdf.numPages;
+        
+        // Render page 1 directly to mainCanvas at crisp high-DPI scale (2.0)
+        const mainCanvas = document.getElementById('modalMainCanvas');
+        if (mainCanvas && mainCanvas.style.display !== 'none') {
+            try {
+                const page1 = await pdf.getPage(1);
+                const viewport = page1.getViewport({ scale: 2.0 });
+                mainCanvas.width = viewport.width;
+                mainCanvas.height = viewport.height;
+                const ctx = mainCanvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                await page1.render({ canvasContext: ctx, viewport }).promise;
+                const placeholder = document.getElementById('modalMainPlaceholder');
+                if (placeholder) placeholder.style.display = 'none';
+            } catch (p1Err) {
+                console.error("Error rendering initial page 1 to main preview:", p1Err);
+            }
+        }
+
+        // If single page PDF, hide thumbnail row
+        if (totalPages <= 1) {
+            thumbnailRow.style.display = 'none';
+            return;
+        }
+        
+        thumbnailRow.style.display = 'flex';
         const maxThumbs = Math.min(totalPages, 5);
         
         for (let pageNum = 1; pageNum <= maxThumbs; pageNum++) {
@@ -1750,20 +1761,22 @@ async function loadPDFGallery(pdfPath, sourceCanvas) {
             thumbDiv.dataset.page = pageNum;
             
             const thumbCanvas = document.createElement('canvas');
-            thumbCanvas.width = 60;
-            thumbCanvas.height = 60;
+            thumbCanvas.width = 140;
+            thumbCanvas.height = 110;
             thumbDiv.appendChild(thumbCanvas);
             thumbnailRow.appendChild(thumbDiv);
             
             (async (num, canvas) => {
                 try {
                     const page = await pdf.getPage(num);
-                    const viewport = page.getViewport({ scale: 0.15 });
-                    const context = canvas.getContext('2d');
-                    
-                    const scaledViewport = page.getViewport({ scale: canvas.width / page.getViewport({ scale: 1.0 }).width });
+                    const baseViewport = page.getViewport({ scale: 1.0 });
+                    const scale = canvas.width / baseViewport.width;
+                    const scaledViewport = page.getViewport({ scale: Math.max(scale, 0.25) });
                     canvas.height = scaledViewport.height;
                     canvas.width = scaledViewport.width;
+                    const context = canvas.getContext('2d');
+                    context.imageSmoothingEnabled = true;
+                    context.imageSmoothingQuality = 'high';
                     
                     await page.render({
                         canvasContext: context,
@@ -1779,13 +1792,19 @@ async function loadPDFGallery(pdfPath, sourceCanvas) {
                 thumbDiv.classList.add('active');
                 
                 const mainCanvas = document.getElementById('modalMainCanvas');
+                const mainImg = document.getElementById('modalMainImg');
                 const placeholder = document.getElementById('modalMainPlaceholder');
+                
+                if (mainImg) mainImg.style.display = 'none';
+                if (mainCanvas) mainCanvas.style.display = 'block';
                 if (placeholder) placeholder.style.display = 'block';
                 
                 try {
                     const page = await pdf.getPage(pageNum);
-                    const viewport = page.getViewport({ scale: 1.5 });
+                    const viewport = page.getViewport({ scale: 2.0 }); // Crisp 2x retina scale
                     const context = mainCanvas.getContext('2d');
+                    context.imageSmoothingEnabled = true;
+                    context.imageSmoothingQuality = 'high';
                     
                     mainCanvas.height = viewport.height;
                     mainCanvas.width = viewport.width;
@@ -1803,6 +1822,7 @@ async function loadPDFGallery(pdfPath, sourceCanvas) {
         }
     } catch (error) {
         console.error('Error loading gallery for PDF:', pdfPath, error);
+        thumbnailRow.style.display = 'none';
     }
 }
 
@@ -1832,8 +1852,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const title = document.getElementById('modalTitle')?.textContent;
                 const desc = document.getElementById('modalDesc')?.textContent;
                 const canvas = document.getElementById('modalMainCanvas');
+                const img = document.getElementById('modalMainImg');
+                const source = (img && img.style.display !== 'none' && img.src) ? img.src : canvas;
                 const pdfPath = canvas ? canvas.getAttribute('data-pdf-path') : null;
-                window.openProductModal(title, desc, canvas, pdfPath);
+                window.openProductModal(title, desc, source, pdfPath);
             }
         });
     });
@@ -2232,22 +2254,54 @@ document.addEventListener('DOMContentLoaded', () => {
             basePrice: pData.basePrice
         };
         
-        // Copy canvas content or image source if available as initial main image
-        if (modalMainCanvas) {
-            const destCtx = modalMainCanvas.getContext('2d');
-            if (sourceCanvas && sourceCanvas.getContext) {
-                modalMainCanvas.width = sourceCanvas.width;
-                modalMainCanvas.height = sourceCanvas.height;
+        // Setup initial main preview (use native <img> for crisp image rendering, canvas for PDFs)
+        const modalMainImg = document.getElementById('modalMainImg');
+        const modalMainPlaceholder = document.getElementById('modalMainPlaceholder');
+        if (modalMainPlaceholder) modalMainPlaceholder.style.display = 'none';
+
+        if (typeof sourceCanvas === 'string' || (sourceCanvas && sourceCanvas.tagName === 'IMG')) {
+            const imgUrl = typeof sourceCanvas === 'string' ? sourceCanvas : sourceCanvas.src;
+            if (modalMainImg) {
+                modalMainImg.src = imgUrl;
+                modalMainImg.alt = title || 'Product preview';
+                modalMainImg.style.display = 'block';
+            }
+            if (modalMainCanvas) {
+                modalMainCanvas.style.display = 'none';
+            }
+        } else if (sourceCanvas && sourceCanvas.getContext) {
+            if (modalMainImg) {
+                modalMainImg.style.display = 'none';
+            }
+            if (modalMainCanvas) {
+                modalMainCanvas.style.display = 'block';
+                modalMainCanvas.width = sourceCanvas.width || 600;
+                modalMainCanvas.height = sourceCanvas.height || 600;
+                const destCtx = modalMainCanvas.getContext('2d');
+                destCtx.imageSmoothingEnabled = true;
+                destCtx.imageSmoothingQuality = 'high';
                 destCtx.drawImage(sourceCanvas, 0, 0);
-            } else if (typeof sourceCanvas === 'string' || (sourceCanvas && sourceCanvas.tagName === 'IMG')) {
-                const imgUrl = typeof sourceCanvas === 'string' ? sourceCanvas : sourceCanvas.src;
-                const img = new Image();
-                img.onload = function() {
-                    modalMainCanvas.width = img.naturalWidth || 600;
-                    modalMainCanvas.height = img.naturalHeight || 600;
-                    destCtx.drawImage(img, 0, 0);
-                };
-                img.src = imgUrl;
+            }
+        } else if (pdfPath && typeof pdfjsLib !== 'undefined') {
+            if (modalMainImg) modalMainImg.style.display = 'none';
+            if (modalMainCanvas) {
+                modalMainCanvas.style.display = 'block';
+                (async () => {
+                    try {
+                        const loadingTask = pdfjsLib.getDocument(pdfPath);
+                        const pdf = await loadingTask.promise;
+                        const page = await pdf.getPage(1);
+                        const viewport = page.getViewport({ scale: 2.0 });
+                        modalMainCanvas.width = viewport.width;
+                        modalMainCanvas.height = viewport.height;
+                        const ctx = modalMainCanvas.getContext('2d');
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        await page.render({ canvasContext: ctx, viewport }).promise;
+                    } catch (renderErr) {
+                        console.error('Error rendering initial PDF page:', renderErr);
+                    }
+                })();
             }
         }
         if (modalMainCanvas && pdfPath) {

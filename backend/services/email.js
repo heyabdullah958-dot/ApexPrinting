@@ -1,20 +1,50 @@
 const nodemailer = require('nodemailer');
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  connectionTimeout: 4000,
-  greetingTimeout: 4000,
-  socketTimeout: 5000
-});
-
 const DEFAULT_COMPANY_EMAIL = 'quotes@apexprinthub.com';
 const EMAIL_FROM = process.env.EMAIL_FROM || DEFAULT_COMPANY_EMAIL;
 const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || DEFAULT_COMPANY_EMAIL;
 const OWNER_EMAIL = process.env.OWNER_EMAIL || DEFAULT_COMPANY_EMAIL;
+
+function getTransporter() {
+  // Test mode simulated transport for test environments with dummy credentials
+  if (process.env.NODE_ENV === 'test' && (process.env.EMAIL_USER === 'test@apexprinthub.com' || process.env.MOCK_EMAIL === 'true')) {
+    return nodemailer.createTransport({
+      jsonTransport: true
+    });
+  }
+
+  // Custom SMTP configuration (e.g. mail.apexprinthub.com, Titan, SendGrid, etc.)
+  if (process.env.SMTP_HOST || process.env.EMAIL_HOST) {
+    return nodemailer.createTransport({
+      host: process.env.SMTP_HOST || process.env.EMAIL_HOST,
+      port: parseInt(process.env.SMTP_PORT || process.env.EMAIL_PORT || '465', 10),
+      secure: (process.env.SMTP_SECURE === 'false' || process.env.EMAIL_SECURE === 'false') ? false : true,
+      auth: {
+        user: process.env.SMTP_USER || process.env.EMAIL_USER,
+        pass: process.env.SMTP_PASS || process.env.EMAIL_PASS
+      },
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 7000
+    });
+  }
+
+  // Default Gmail / SMTP service configuration
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    return nodemailer.createTransport({
+      service: process.env.EMAIL_SERVICE || 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      },
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 7000
+    });
+  }
+
+  return null;
+}
 
 // Responsive luxury HTML wrapper matching Apex Print Hub branding
 const generateHtml = (title, content, preheader = '') => `
@@ -61,16 +91,24 @@ const generateHtml = (title, content, preheader = '') => `
 `;
 
 async function sendEmail({ to, subject, html, preheader, attachments, from, replyTo }) {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.warn('⚠️ Email credentials missing from environment, skipping send for:', subject);
+  const isTestMock = process.env.NODE_ENV === 'test' && (process.env.EMAIL_USER === 'test@apexprinthub.com' || process.env.MOCK_EMAIL === 'true');
+
+  if (!isTestMock && (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) && !process.env.SMTP_HOST) {
+    console.warn(`⚠️ Email credentials missing from environment (EMAIL_USER / EMAIL_PASS not set). Skipping delivery for: "${subject}" to ${to}`);
     return false;
   }
   
   try {
+    const activeTransporter = getTransporter();
+    if (!activeTransporter) {
+      console.warn(`⚠️ Transporter unavailable for: "${subject}" to ${to}`);
+      return false;
+    }
+
     const senderAddress = from || `"Apex Print Hub" <${EMAIL_FROM}>`;
     const replyAddress = replyTo || EMAIL_REPLY_TO;
 
-    const info = await transporter.sendMail({
+    const info = await activeTransporter.sendMail({
       from: senderAddress,
       to,
       replyTo: replyAddress,
@@ -78,10 +116,10 @@ async function sendEmail({ to, subject, html, preheader, attachments, from, repl
       html: generateHtml(subject, html, preheader),
       attachments
     });
-    console.log(`✉️ Email successfully dispatched to ${to} (From: ${senderAddress}, Reply-To: ${replyAddress}, MessageID: ${info.messageId})`);
+    console.log(`✉️ Email successfully dispatched to ${to} (From: ${senderAddress}, Reply-To: ${replyAddress}, MessageID: ${info.messageId || 'mock'})`);
     return true;
   } catch (error) {
-    console.error(`❌ Email send failed to ${to}:`, error.message);
+    console.error(`❌ Email send failed to ${to} [${error.code || 'UNKNOWN'}]:`, error.message);
     return false;
   }
 }

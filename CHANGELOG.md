@@ -116,3 +116,27 @@ Initial tracking of project changes.
   - 9-stage end-to-end automated Playwright verification suite testing the entire user journey: product modal upload, progress bar, PDF attachment, in-app lightbox, zero broken popup tabs, checkout review, per-item artwork swap, multipart form submission, post-submission storage purge, and backend email HTML generation.
   - 100% test pass verified with zero console errors.
 ---
+
+## Phase 1 — Quote Email Delivery Resilience, Hero Copy & Product Modal Animation Fix — 2026-09-07
+- **Quote & Contact Email Delivery Hardening (`backend/services/email.js`, `backend/routes/contact.js`, `backend/routes/quote.js`)**:
+  - Refactored Nodemailer configuration with dynamic `getTransporter()` supporting custom domain SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`) and service-based SMTP (`EMAIL_SERVICE`, `EMAIL_USER`, `EMAIL_PASS`).
+  - Added simulated `jsonTransport` in test mode (`NODE_ENV === 'test'`) for deterministic integration testing.
+  - Implemented 6-second timeout race on dual email notifications (store owner & customer).
+  - Enforced strict owner notification verification (`quotes@apexprinthub.com`). If owner notification fails or credentials are unconfigured, endpoints return structured HTTP 500 (`EMAIL_DELIVERY_FAILED`) or 503 (`EMAIL_CREDENTIALS_MISSING`) rather than returning false-positive HTTP 200.
+- **Hero Branding Copy (`index.html`)**:
+  - Updated hero section typography to strictly read:
+    ```html
+    Bespoke<br>
+    Print and Packaging<br>
+    Studio
+    ```
+- **Product Opening Animation & Image Resolution (`index.html`, `services.html`, `style.css`, `script.js`)**:
+  - Inserted native `<img id="modalMainImg">` into `.main-image-container` alongside `<canvas id="modalMainCanvas">`.
+  - Updated `openProductModal` to display native `<img>` for raster products, eliminating canvas raster lag and anti-aliasing blur during CSS expansion.
+  - Completely hides `.thumbnail-row` (`display: none`) for single-image catalog items or when `!pdfPath` or `totalPages <= 1`, eliminating duplicate single-thumbnail mosaic boxes.
+  - Multi-page PDF thumbnail canvases now render at 140x110 (2x DPR), and main PDF pages render at 2.0 scale with `imageSmoothingQuality = 'high'`.
+  - Added hardware acceleration (`transform: translate3d(0, 30px, 0); will-change: transform, opacity; backface-visibility: hidden;`) to `.modal-content` and fixed `.thumbnail` flex sizing to `flex: 0 0 70px; width: 70px; height: 55px;`.
+- **Verification**:
+  - Verified via `tests/unit-email-contact.test.js` (5/5 passing), `tests/phase1-submission-pipeline.test.js` (10/10 passing), and `tests/email-delivery-failure.test.js` (4/4 passing).
+  - Verified via Playwright automated tests on mobile (390x844) and desktop (1440x900).
+

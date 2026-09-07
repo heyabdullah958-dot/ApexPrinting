@@ -2112,14 +2112,17 @@ select.form-control option {
   position: relative;
   max-height: 90vh;
   overflow-y: auto;
-  transform: translateY(30px);
-  transition: transform 0.3s var(--ease-out);
+  transform: translate3d(0, 30px, 0);
+  transition: transform 0.3s var(--ease-out), opacity 0.3s ease;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   width: 95%;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 .modal-backdrop.active .modal-content {
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0);
 }
 
 .modal-close {
@@ -2185,16 +2188,42 @@ select.form-control option {
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.main-image-container img,
+.main-image-container canvas,
+.modal-product-img {
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  image-rendering: auto;
+  image-rendering: -webkit-optimize-contrast;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
 }
 
 .thumbnail-row {
   display: flex;
   gap: 0.75rem;
+  justify-content: flex-start;
+  align-items: center;
+  overflow-x: auto;
+  padding: 4px 2px;
 }
 
 .thumbnail {
-  flex: 1;
-  aspect-ratio: 4 / 3;
+  flex: 0 0 70px;
+  width: 70px;
+  height: 55px;
   background: var(--black-soft);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-sm);
@@ -2205,11 +2234,16 @@ select.form-control option {
   display: flex;
   justify-content: center;
   align-items: center;
+  box-sizing: border-box;
 }
-.thumbnail canvas {
+.thumbnail canvas,
+.thumbnail img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  display: block;
+  image-rendering: auto;
+  image-rendering: -webkit-optimize-contrast;
 }
 .thumbnail.active, .thumbnail:hover {
   opacity: 1;
