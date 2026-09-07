@@ -10,4 +10,6 @@ dist-export/
 New folder (2)/
 scripts/screenshots/
 .superpowers/
-temp_test_artwork/
+temp_test_artwork/
+*.mp4
+*.mov

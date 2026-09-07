@@ -281,25 +281,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const yearEl = document.getElementById('year');
     if(yearEl) yearEl.textContent = new Date().getFullYear();
 
-    // Scroll lock utility for mobile and overlays
-    let scrollPos = 0;
+    // Scroll lock utility for mobile and overlays (zero layout shift, preserves document scroll offset)
     let isScrollLocked = false;
     window.lockBodyScroll = function() {
         if (isScrollLocked) return;
-        scrollPos = window.pageYOffset || document.documentElement.scrollTop;
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${scrollPos}px`;
-        document.body.style.width = '100%';
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+        if (scrollbarWidth > 0) {
+            document.body.style.paddingRight = `${scrollbarWidth}px`;
+            const navbar = document.getElementById('navbar');
+            if (navbar) navbar.style.paddingRight = `${scrollbarWidth}px`;
+        }
         document.body.style.overflow = 'hidden';
         isScrollLocked = true;
     };
     window.unlockBodyScroll = function() {
         if (!isScrollLocked) return;
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
         document.body.style.overflow = '';
-        window.scrollTo(0, scrollPos);
+        document.body.style.paddingRight = '';
+        const navbar = document.getElementById('navbar');
+        if (navbar) navbar.style.paddingRight = '';
         isScrollLocked = false;
     };
 
@@ -3050,7 +3050,9 @@ function init3DCurvedCarousel() {
     const dragSensitivity = 0.16;
     const idleSpeed = 0.03;
 
+    let isPointerDown = false;
     let isDragging = false;
+    let hasDragged = false;
     let isHovered = false;
     let startX = 0;
     let startY = 0;
@@ -3060,24 +3062,53 @@ function init3DCurvedCarousel() {
     let radius = 850;
     let cardWidth = 230;
 
-    // Card click handlers for opening product customization & inquiry modal
-    cards.forEach(card => {
+    // Helper to open modal for a specific card with smooth centering
+    function triggerCardModal(card, index) {
+        // Smoothly rotate carousel to center the selected card
+        const stepAngle = 360 / numCards;
+        const cardAngle = stepAngle * index;
+        const relDiff = ((cardAngle + targetRotation) % 360 + 540) % 360 - 180;
+        targetRotation -= relDiff;
+        velocity = 0;
+
+        const title = card.querySelector('.cylinder-card-title')?.textContent.trim() || 'Product';
+        const subtitle = card.querySelector('.cylinder-card-subtitle')?.textContent.trim() || '';
+        const img = card.querySelector('img');
+        const imgSrc = img ? img.src : null;
+        
+        if (typeof window.openProductModal === 'function') {
+            window.openProductModal(title, subtitle, imgSrc, null);
+        }
+    }
+
+    // Card click & button handlers
+    cards.forEach((card, index) => {
         card.style.cursor = 'pointer';
+        
+        // Card click handler
         card.addEventListener('click', (e) => {
-            if (dragDistance > 6) {
+            if (hasDragged || dragDistance > 8) {
                 e.preventDefault();
                 e.stopPropagation();
                 return;
             }
-            const title = card.querySelector('.cylinder-card-title')?.textContent.trim() || 'Product';
-            const subtitle = card.querySelector('.cylinder-card-subtitle')?.textContent.trim() || '';
-            const img = card.querySelector('img');
-            const imgSrc = img ? img.src : null;
-            
-            if (typeof window.openProductModal === 'function') {
-                window.openProductModal(title, subtitle, imgSrc, null);
-            }
+            triggerCardModal(card, index);
         });
+
+        // Dedicated "Shop Now" button handler
+        const btn = card.querySelector('.cylinder-card-btn');
+        if (btn) {
+            btn.addEventListener('click', (e) => {
+                if (hasDragged || dragDistance > 8) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
+                e.preventDefault();
+                e.stopPropagation();
+                triggerCardModal(card, index);
+            });
+        }
     });
 
     function updateDimensions() {
@@ -3123,19 +3154,22 @@ function init3DCurvedCarousel() {
             }
 
             const zIndex = Math.round(1000 * Math.cos(rad));
+            const isFrontFacing = absAngle < 65 && opacity > 0.15;
 
             card.style.transform = `translate3d(${X.toFixed(1)}px, 0, ${Z.toFixed(1)}px) rotateY(${rotY.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
             card.style.zIndex = zIndex;
             card.style.opacity = opacity.toFixed(3);
             card.style.visibility = opacity > 0.01 ? 'visible' : 'hidden';
+            card.style.pointerEvents = isFrontFacing ? 'auto' : 'none';
         });
     }
 
-    // Pointer Events (Mouse & Touch drag)
+    // Pointer Events (Mouse & Touch drag) with robust threshold disambiguation
     viewport.addEventListener('pointerdown', (e) => {
-        isDragging = true;
+        isPointerDown = true;
+        isDragging = false;
+        hasDragged = false;
         dragDistance = 0;
-        viewport.classList.add('is-dragging');
         startX = e.clientX;
         startY = e.clientY;
         lastX = e.clientX;
@@ -3144,25 +3178,36 @@ function init3DCurvedCarousel() {
     });
 
     window.addEventListener('pointermove', (e) => {
-        if (!isDragging) return;
+        if (!isPointerDown) return;
         const now = performance.now();
         const deltaX = e.clientX - lastX;
-        const dt = Math.max(now - lastTime, 8);
+        const moveDist = Math.hypot(e.clientX - startX, e.clientY - startY);
+        dragDistance = moveDist;
 
-        dragDistance += Math.abs(deltaX);
+        if (!isDragging && moveDist > 7) {
+            isDragging = true;
+            hasDragged = true;
+            viewport.classList.add('is-dragging');
+        }
 
-        targetRotation += deltaX * dragSensitivity;
-        velocity = (deltaX / dt) * 12;
-
-        lastX = e.clientX;
-        lastTime = now;
+        if (isDragging) {
+            const dt = Math.max(now - lastTime, 8);
+            targetRotation += deltaX * dragSensitivity;
+            velocity = (deltaX / dt) * 12;
+            lastX = e.clientX;
+            lastTime = now;
+        }
     });
 
     const stopDragging = () => {
-        if (!isDragging) return;
+        if (!isPointerDown) return;
+        isPointerDown = false;
         isDragging = false;
         viewport.classList.remove('is-dragging');
-        setTimeout(() => { dragDistance = 0; }, 50);
+        setTimeout(() => {
+            hasDragged = false;
+            dragDistance = 0;
+        }, 120);
     };
 
     window.addEventListener('pointerup', stopDragging);
@@ -3184,13 +3229,14 @@ function init3DCurvedCarousel() {
 
     // 60-120fps Animation Loop
     function renderLoop() {
+        const isModalActive = document.getElementById('productModal')?.classList.contains('active');
         if (!isDragging) {
             if (Math.abs(velocity) > 0.005) {
                 targetRotation += velocity;
                 velocity *= friction;
             } else {
                 velocity = 0;
-                if (!isHovered) {
+                if (!isHovered && !isModalActive) {
                     targetRotation -= idleSpeed;
                 }
             }

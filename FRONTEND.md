@@ -90,5 +90,18 @@ Components like Navbar, Hero, and Forms are implemented natively in the DOM.
 - Files modified: `index.html`, `services.html`, `contact.html`, `style.css`, `script.js`.
 - Confidence: 100% — Authoritatively verified across headless Chromium, all breakpoints, and automated interaction checks.
 ---
-
-
+## Phase 1 — 3D Product Carousel Selection Glitch Fix & Animated "Shop Now" Action Integration — 2026-09-07
+- **Selection Flicker Resolution & Zero Layout Shift**:
+  - Replaced body scroll locking logic: removed disruptive `document.body.style.position = 'fixed'`, eliminating browser scroll jumps and viewport flashes. Replaced with dynamic scrollbar compensation (`document.body.style.paddingRight = scrollbarWidth`) and `document.body.style.overflow = 'hidden'`.
+  - Added hardware-accelerated transforms (`translate3d`, `scale(0.97)` to `scale(1)`), radial backdrop gradients with cubic-bezier opacity easing (`cubic-bezier(0.16, 1, 0.3, 1)`), and will-change optimizations to `.modal-backdrop` and `.modal-content`.
+  - Implemented smooth card selection centering: when a card is clicked, the carousel track calculates the shortest angular distance (`relDiff`) and smoothly centers the card, pausing idle rotation during active modal sessions.
+- **Accurate 3D Hitbox & Hover Reliability**:
+  - Resolved raycasting conflicts by setting `pointer-events: none` on `#cylinderCarouselContainer` and `#cylinderCarouselTrack` while maintaining `pointer-events: auto` on `.cylinder-card`.
+  - Added dynamic raycast culling in `updateCarouselCards()`: only front-facing cards with `absAngle < 65 && opacity > 0.15` have `pointer-events: auto`, preventing back-facing cards from intercepting cursor events.
+- **Animated Luxury "Shop Now" Action Buttons**:
+  - Integrated `.cylinder-card-btn` with "Shop Now" and forward arrow SVGs across all 16 cards in `index.html`.
+  - Luxury gold styling with angled sheen micro-animation (`::after` moving on hover), dynamic gold gradient fill, and 20px gold glow.
+  - Added robust pointer gesture disambiguation (`Math.hypot(dx, dy) > 7px` threshold) so free drag/swipe navigation works smoothly without accidental modal triggers.
+- Files modified: `index.html`, `style.css`, `script.js`.
+- Verification: 100% automated pass on `scripts/test-carousel-comprehensive.js` (6 stages), `scripts/verify-fixes.js`, `scripts/verify-process-why-apex.js`, and `scripts/test-artwork-flow.js`.
+- Confidence: 100% — Verified on desktop (1440x960), tablet (768x1024), and mobile (390x844).

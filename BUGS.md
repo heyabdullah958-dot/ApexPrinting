@@ -115,4 +115,25 @@ Initial tracking of project bugs and fixes.
     4. *Eliminated PDF.js Canvas Double-Render Race Condition*: Removed duplicated async page 1 render loop in `openProductModal`, centralized render task lifecycle in `loadPDFGallery`, added `RenderTask.cancel()` handling on modal close and thumbnail navigation, and removed dummy static thumbnails with undefined `activateThumbnail()` handlers from `index.html` and `services.html`.
   - **Confidence**: 100% — Fully verified with automated test suites and live production end-to-end testing against `https://apex-printing-seven.vercel.app`.
 
+---
 
+## Phase 1 — 3D Product Carousel Selection Glitch Fix & Animated "Shop Now" Action Integration — 2026-09-07
+- **Symptom**:
+  1. *Background Flickering / Selection Jump Glitch*: When clicking or selecting a product card in the 3D cylinder carousel, there was an abrupt flicker/jump in the background and lighting states rather than a smooth, seamless transition.
+  2. *Unresponsive Card Hover / Hitbox*: Hovering over carousel cards frequently missed raycasting/pointer-events, making cards unresponsive or difficult to trigger on hover.
+  3. *Missing "Shop Now" Direct Action*: Product cards only had passive text overlays without an explicit, elegant call-to-action button to initiate customization or order inquiry.
+- **Root Cause**:
+  1. *Scroll Lock Reflow & Instantaneous Rotation*: `window.lockBodyScroll()` in `script.js` was toggling `document.body.style.position = 'fixed'`, `top: -${scrollPos}px`, and `width: 100%`. In WebKit and Chromium engines, setting `position: fixed` on `body` strips standard document flow, resets the scroll rendering tree, and forces a severe viewport repaint/jump before the modal displays. Additionally, clicking a card did not smoothly center the card along the cylinder circumference, causing abrupt perspective jumps.
+  2. *Pointer Raycast Interception*: `#cylinderCarouselContainer` and `#cylinderCarouselTrack` were capturing mouse events above the 3D stage. Furthermore, back-facing cards rotated away ($|\theta| > 65^\circ$) were keeping `pointer-events: auto`, intercepting mouse rays meant for front-facing cards.
+  3. *Drag vs Click Collision*: Drag listeners on `#cylinderCarouselViewport` lacked strict pointer delta thresholds, causing drag releases to occasionally fire accidental card click events.
+- **Fix**:
+  1. *Zero-Layout-Shift Scroll Lock*: Refactored `window.lockBodyScroll()` and `window.unlockBodyScroll()` to use scrollbar compensation (`document.body.style.paddingRight = scrollbarWidth`) and `document.body.style.overflow = 'hidden'` without modifying `body.style.position`.
+  2. *Backdrop & Dialog Acceleration*: Upgraded `.modal-backdrop` and `.modal-content` with hardware-accelerated transforms (`translate3d(0, 24px, 0) scale(0.97)` to `scale(1)`), radial backdrop gradients with smooth cubic-bezier easing (`cubic-bezier(0.16, 1, 0.3, 1)`), and will-change optimization.
+  3. *Smooth Card Selection Centering*: In `triggerCardModal`, calculated relative angular offset `relDiff = ((cardAngle + targetRotation) % 360 + 540) % 360 - 180` and smoothly adjusted `targetRotation` to center the card. Halted ambient idle rotation while modals are open (`!isModalActive`).
+  4. *Pointer Event Filtering*: Added `pointer-events: none` to container and track in `style.css`. In `script.js`, dynamically set `card.style.pointerEvents = (absAngle < 65 && opacity > 0.15) ? 'auto' : 'none'`.
+  5. *Animated "Shop Now" Action Buttons*: Integrated `.cylinder-card-btn` with "Shop Now" and forward arrow SVGs on all 16 cards with gold sheen hover micro-animations (`::after`), gradient fill, and 20px gold glow.
+  6. *Movement Threshold Disambiguation*: Added `Math.hypot(dx, dy) > 7px` tracking: gestures exceeding 7px lock into dragging (`hasDragged = true`), cleanly suppressing card and button clicks during free drag/swipe navigation.
+- **Verification**:
+  - Verified via 6-stage Playwright test suite `scripts/test-carousel-comprehensive.js` (16 cards & buttons verified, hover hit-testing verified, modal opening verified, zero layout shift verified, drag/swipe disambiguation verified, mobile/tablet viewports verified).
+  - Regression tested with `scripts/verify-fixes.js`, `scripts/verify-process-why-apex.js`, and `scripts/test-artwork-flow.js`.
+- **Confidence**: 100% — Fully verified with zero regressions.

@@ -142,4 +142,19 @@ Initial tracking of project changes.
   - Added SMTP credentials to Vercel production environment variables, deployed via Vercel CLI, and verified live production `POST /api/quote` and `POST /api/contact` returning HTTP 200 with `customerEmailSent: true` on `https://apex-printing-seven.vercel.app`.
   - Removed `-webkit-optimize-contrast` from CSS to eliminate nearest-neighbor pixelation, resolved PDF.js canvas double-render race condition, and cleaned up static dummy thumbnails.
 
+---
 
+## Phase 1 — 3D Product Carousel Selection Glitch Fix & Animated "Shop Now" Action Integration — 2026-09-07
+- **Selection Flicker & Background Transition Smoothing (`script.js`, `style.css`)**:
+  - Eliminated abrupt background/viewport jump upon product modal opening by refactoring `window.lockBodyScroll()` and `window.unlockBodyScroll()` to preserve standard document position flow (`document.body.style.position = ''`) with zero-layout-shift scrollbar compensation (`document.body.style.paddingRight = scrollbarWidth`).
+  - Added smooth card centering interpolation (`relDiff` angular delta) on selection and halted carousel ambient drift during active modal sessions (`!isModalActive`).
+  - Upgraded modal backdrop and dialog with hardware-accelerated transforms (`translate3d`, `scale(0.97)` to `scale(1)`), radial backdrop gradients, and cubic-bezier opacity easing (`cubic-bezier(0.16, 1, 0.3, 1)`).
+- **Accurate 3D Hitbox & Hover Reliability (`script.js`, `style.css`)**:
+  - Fixed raycast intercept misses by applying `pointer-events: none` to `#cylinderCarouselContainer` and `#cylinderCarouselTrack` while maintaining `pointer-events: auto` on `.cylinder-card`.
+  - Dynamically cull pointer events for cards rotated to the backside of the cylinder (`absAngle < 65 && opacity > 0.15 ? 'auto' : 'none'`) preventing back-facing cards from capturing hover rays.
+- **Luxury Animated "Shop Now" Action Buttons (`index.html`, `style.css`, `script.js`)**:
+  - Integrated sleek pill-shaped "Shop Now" buttons (`.cylinder-card-btn`) with forward arrow SVGs across all 16 carousel cards.
+  - Implemented luxury gold styling with angled sheen micro-animations (`::after` sweep on hover), dynamic gold gradient fill, and 20px gold glow.
+  - Added robust pointer gesture disambiguation (`Math.hypot(dx, dy) > 7px`) ensuring drag/swipe motion glides freely without firing accidental modal opens.
+- **Verification**:
+  - 100% automated pass on comprehensive 6-stage test suite (`scripts/test-carousel-comprehensive.js`), regression modal test (`scripts/verify-fixes.js`), process section test (`scripts/verify-process-why-apex.js`), and end-to-end cart test (`scripts/test-artwork-flow.js`).

@@ -2085,9 +2085,9 @@ select.form-control option {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: radial-gradient(circle at 50% 50%, rgba(14, 14, 14, 0.88) 0%, rgba(5, 5, 5, 0.95) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2095,7 +2095,9 @@ select.form-control option {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transform: translateZ(0);
+  will-change: opacity;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-backdrop.active {
@@ -2112,8 +2114,8 @@ select.form-control option {
   position: relative;
   max-height: 90vh;
   overflow-y: auto;
-  transform: translate3d(0, 30px, 0);
-  transition: transform 0.3s var(--ease-out), opacity 0.3s ease;
+  transform: translate3d(0, 24px, 0) scale(0.97);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
   will-change: transform, opacity;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
@@ -2122,7 +2124,7 @@ select.form-control option {
 }
 
 .modal-backdrop.active .modal-content {
-  transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0) scale(1);
 }
 
 .modal-close {
@@ -2644,6 +2646,7 @@ select.form-control option {
   align-items: center;
   justify-content: center;
   transform-style: preserve-3d;
+  pointer-events: none; /* CRITICAL FIX: allow raycasting / pointer events to pass through to 3D cards */
 }
 
 .cylinder-carousel-track {
@@ -2654,6 +2657,7 @@ select.form-control option {
   height: 0;
   transform-style: preserve-3d;
   will-change: transform;
+  pointer-events: none; /* CRITICAL FIX: allow raycasting / pointer events to pass through to 3D cards */
 }
 
 /* 3D Card */
@@ -2672,16 +2676,18 @@ select.form-control option {
     0 0 0 1px rgba(201, 168, 76, 0.15);
   transform-origin: center center;
   will-change: transform, opacity;
-  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  transition: border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  pointer-events: auto;
 }
 
 .cylinder-card:hover {
-  border-color: rgba(201, 168, 76, 0.85);
+  border-color: rgba(201, 168, 76, 0.95);
   box-shadow: 
-    0 25px 50px rgba(0, 0, 0, 0.9),
-    0 0 30px rgba(201, 168, 76, 0.4);
+    0 25px 50px rgba(0, 0, 0, 0.95),
+    0 0 35px rgba(201, 168, 76, 0.45),
+    inset 0 0 20px rgba(201, 168, 76, 0.08);
 }
 
 .cylinder-card img {
@@ -2702,11 +2708,11 @@ select.form-control option {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 2.5rem 1.15rem 1.15rem;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.5) 60%, transparent 100%);
+  padding: 2.2rem 1.15rem 1.15rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.6) 65%, transparent 100%);
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.28rem;
   text-align: left;
   pointer-events: none;
 }
@@ -2718,14 +2724,96 @@ select.form-control option {
   color: var(--gold-light);
   line-height: 1.2;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
 }
 
 .cylinder-card-subtitle {
   font-family: var(--font-sans);
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   color: rgba(255, 255, 255, 0.9);
   letter-spacing: 0.02em;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+
+/* Sleek Luxury "Shop Now" Action Button */
+.cylinder-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+  padding: 0.42rem 0.95rem;
+  background: rgba(18, 18, 18, 0.84);
+  border: 1px solid rgba(201, 168, 76, 0.48);
+  border-radius: 9999px;
+  color: #f7e7ce;
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  pointer-events: auto;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  width: fit-content;
+}
+
+.cylinder-card-btn span {
+  position: relative;
+  z-index: 2;
+}
+
+.cylinder-card-btn svg {
+  position: relative;
+  z-index: 2;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Subtle gold sheen micro-animation */
+.cylinder-card-btn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -110%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.32) 40%,
+    rgba(201, 168, 76, 0.45) 60%,
+    transparent 100%
+  );
+  transform: rotate(25deg);
+  pointer-events: none;
+  transition: left 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1;
+}
+
+.cylinder-card-btn:hover::after,
+.cylinder-card:hover .cylinder-card-btn::after {
+  left: 160%;
+}
+
+.cylinder-card-btn:hover {
+  background: linear-gradient(135deg, #c9a84c 0%, #ecd99a 50%, #b8933b 100%);
+  color: #0c0c0c;
+  border-color: #f5e4ab;
+  box-shadow: 
+    0 0 20px rgba(201, 168, 76, 0.65),
+    0 4px 18px rgba(0, 0, 0, 0.6);
+  transform: translateY(-2px);
+}
+
+.cylinder-card-btn:hover svg {
+  transform: translateX(3px);
+  color: #0c0c0c;
 }
 
 /* Editorial Hero Bottom */
@@ -2814,6 +2902,10 @@ select.form-control option {
     left: -100px;
     top: -150px;
   }
+  .cylinder-card-btn {
+    padding: 0.38rem 0.85rem;
+    font-size: 0.7rem;
+  }
 }
 
 @media (max-width: 576px) {
@@ -2830,6 +2922,25 @@ select.form-control option {
     left: -85px;
     top: -127px;
     border-radius: 14px;
+  }
+  .cylinder-card-overlay {
+    padding: 1.6rem 0.85rem 0.85rem;
+  }
+  .cylinder-card-title {
+    font-size: 0.88rem;
+  }
+  .cylinder-card-subtitle {
+    font-size: 0.68rem;
+  }
+  .cylinder-card-btn {
+    padding: 0.3rem 0.72rem;
+    font-size: 0.65rem;
+    margin-top: 0.2rem;
+    gap: 0.35rem;
+  }
+  .cylinder-card-btn svg {
+    width: 11px;
+    height: 11px;
   }
   .editorial-hero-actions {
     flex-direction: column;
