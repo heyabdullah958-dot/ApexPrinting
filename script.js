@@ -1394,6 +1394,13 @@ window.closeProductModal = function() {
         productModal.classList.remove('active');
         window.unlockBodyScroll();
     }
+    // Cancel in-flight PDF render task if active
+    if (window._activeModalRenderTask) {
+        try { window._activeModalRenderTask.cancel(); } catch (e) {}
+        window._activeModalRenderTask = null;
+    }
+    const modalMainImg = document.getElementById('modalMainImg');
+    if (modalMainImg) modalMainImg.src = '';
 };
 
 window.updatePrice = function() {
@@ -1711,14 +1718,14 @@ window.updatePrice = function() {
 // Render multi-page preview thumbnails dynamically
 async function loadPDFGallery(pdfPath, sourceCanvas) {
     const thumbnailRow = document.querySelector('.thumbnail-row');
-    if (!thumbnailRow) return;
-    
-    thumbnailRow.innerHTML = '';
+    if (thumbnailRow) {
+        thumbnailRow.innerHTML = '';
+    }
     
     // If no PDF path or pdfjsLib not loaded, cleanly hide the thumbnail row
     // (Single-image items should never display a duplicate low-res thumbnail box)
     if (!pdfPath || typeof pdfjsLib === 'undefined') {
-        thumbnailRow.style.display = 'none';
+        if (thumbnailRow) thumbnailRow.style.display = 'none';
         return;
     }
     
@@ -1727,6 +1734,12 @@ async function loadPDFGallery(pdfPath, sourceCanvas) {
         const pdf = await loadingTask.promise;
         const totalPages = pdf.numPages;
         
+        // Cancel any pending main canvas render task before starting page 1
+        if (window._activeModalRenderTask) {
+            try { window._activeModalRenderTask.cancel(); } catch (cancelErr) {}
+            window._activeModalRenderTask = null;
+        }
+
         // Render page 1 directly to mainCanvas at crisp high-DPI scale (2.0)
         const mainCanvas = document.getElementById('modalMainCanvas');
         if (mainCanvas && mainCanvas.style.display !== 'none') {
@@ -1738,17 +1751,24 @@ async function loadPDFGallery(pdfPath, sourceCanvas) {
                 const ctx = mainCanvas.getContext('2d');
                 ctx.imageSmoothingEnabled = true;
                 ctx.imageSmoothingQuality = 'high';
-                await page1.render({ canvasContext: ctx, viewport }).promise;
+                
+                const renderTask = page1.render({ canvasContext: ctx, viewport });
+                window._activeModalRenderTask = renderTask;
+                await renderTask.promise;
+                window._activeModalRenderTask = null;
+                
                 const placeholder = document.getElementById('modalMainPlaceholder');
                 if (placeholder) placeholder.style.display = 'none';
             } catch (p1Err) {
-                console.error("Error rendering initial page 1 to main preview:", p1Err);
+                if (p1Err && p1Err.name !== 'RenderingCancelledException') {
+                    console.error("Error rendering initial page 1 to main preview:", p1Err);
+                }
             }
         }
 
         // If single page PDF, hide thumbnail row
-        if (totalPages <= 1) {
-            thumbnailRow.style.display = 'none';
+        if (!thumbnailRow || totalPages <= 1) {
+            if (thumbnailRow) thumbnailRow.style.display = 'none';
             return;
         }
         
@@ -1783,7 +1803,9 @@ async function loadPDFGallery(pdfPath, sourceCanvas) {
                         viewport: scaledViewport
                     }).promise;
                 } catch (e) {
-                    console.error("Error rendering thumbnail page:", num, e);
+                    if (e && e.name !== 'RenderingCancelledException') {
+                        console.error("Error rendering thumbnail page:", num, e);
+                    }
                 }
             })(pageNum, thumbCanvas);
             
@@ -1799,6 +1821,11 @@ async function loadPDFGallery(pdfPath, sourceCanvas) {
                 if (mainCanvas) mainCanvas.style.display = 'block';
                 if (placeholder) placeholder.style.display = 'block';
                 
+                if (window._activeModalRenderTask) {
+                    try { window._activeModalRenderTask.cancel(); } catch (cErr) {}
+                    window._activeModalRenderTask = null;
+                }
+
                 try {
                     const page = await pdf.getPage(pageNum);
                     const viewport = page.getViewport({ scale: 2.0 }); // Crisp 2x retina scale
@@ -1809,20 +1836,25 @@ async function loadPDFGallery(pdfPath, sourceCanvas) {
                     mainCanvas.height = viewport.height;
                     mainCanvas.width = viewport.width;
                     
-                    await page.render({
+                    const rTask = page.render({
                         canvasContext: context,
                         viewport: viewport
-                    }).promise;
+                    });
+                    window._activeModalRenderTask = rTask;
+                    await rTask.promise;
+                    window._activeModalRenderTask = null;
                     
                     if (placeholder) placeholder.style.display = 'none';
                 } catch (err) {
-                    console.error("Error switching main preview page:", err);
+                    if (err && err.name !== 'RenderingCancelledException') {
+                        console.error("Error switching main preview page:", err);
+                    }
                 }
             });
         }
     } catch (error) {
         console.error('Error loading gallery for PDF:', pdfPath, error);
-        thumbnailRow.style.display = 'none';
+        if (thumbnailRow) thumbnailRow.style.display = 'none';
     }
 }
 
@@ -2269,10 +2301,24 @@ document.addEventListener('DOMContentLoaded', () => {
             if (modalMainCanvas) {
                 modalMainCanvas.style.display = 'none';
             }
-        } else if (sourceCanvas && sourceCanvas.getContext) {
-            if (modalMainImg) {
-                modalMainImg.style.display = 'none';
+        } else if (pdfPath && typeof pdfjsLib !== 'undefined') {
+            if (modalMainImg) modalMainImg.style.display = 'none';
+            if (modalMainCanvas) {
+                modalMainCanvas.style.display = 'block';
+                // If sourceCanvas has valid rendered content (>300px), display as immediate crisp preview
+                if (sourceCanvas && sourceCanvas.getContext && sourceCanvas.width > 300) {
+                    modalMainCanvas.width = sourceCanvas.width;
+                    modalMainCanvas.height = sourceCanvas.height;
+                    const destCtx = modalMainCanvas.getContext('2d');
+                    destCtx.imageSmoothingEnabled = true;
+                    destCtx.imageSmoothingQuality = 'high';
+                    destCtx.drawImage(sourceCanvas, 0, 0);
+                } else if (modalMainPlaceholder) {
+                    modalMainPlaceholder.style.display = 'flex';
+                }
             }
+        } else if (sourceCanvas && sourceCanvas.getContext) {
+            if (modalMainImg) modalMainImg.style.display = 'none';
             if (modalMainCanvas) {
                 modalMainCanvas.style.display = 'block';
                 modalMainCanvas.width = sourceCanvas.width || 600;
@@ -2281,27 +2327,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 destCtx.imageSmoothingEnabled = true;
                 destCtx.imageSmoothingQuality = 'high';
                 destCtx.drawImage(sourceCanvas, 0, 0);
-            }
-        } else if (pdfPath && typeof pdfjsLib !== 'undefined') {
-            if (modalMainImg) modalMainImg.style.display = 'none';
-            if (modalMainCanvas) {
-                modalMainCanvas.style.display = 'block';
-                (async () => {
-                    try {
-                        const loadingTask = pdfjsLib.getDocument(pdfPath);
-                        const pdf = await loadingTask.promise;
-                        const page = await pdf.getPage(1);
-                        const viewport = page.getViewport({ scale: 2.0 });
-                        modalMainCanvas.width = viewport.width;
-                        modalMainCanvas.height = viewport.height;
-                        const ctx = modalMainCanvas.getContext('2d');
-                        ctx.imageSmoothingEnabled = true;
-                        ctx.imageSmoothingQuality = 'high';
-                        await page.render({ canvasContext: ctx, viewport }).promise;
-                    } catch (renderErr) {
-                        console.error('Error rendering initial PDF page:', renderErr);
-                    }
-                })();
             }
         }
         if (modalMainCanvas && pdfPath) {
