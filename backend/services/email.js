@@ -1,9 +1,97 @@
 const nodemailer = require('nodemailer');
 
-const DEFAULT_COMPANY_EMAIL = 'quotes@apexprinthub.com';
-const EMAIL_FROM = process.env.EMAIL_FROM || DEFAULT_COMPANY_EMAIL;
-const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || DEFAULT_COMPANY_EMAIL;
-const OWNER_EMAIL = process.env.OWNER_EMAIL || DEFAULT_COMPANY_EMAIL;
+const DEFAULT_BRAND_NAME = 'Apex Print Hub';
+const DEFAULT_BRAND_EMAIL = 'quotes@apexprinthub.com';
+const DEFAULT_BRAND_SENDER = `"${DEFAULT_BRAND_NAME}" <${DEFAULT_BRAND_EMAIL}>`;
+
+/**
+ * Extracts a clean, bare email address from a string
+ * (e.g. "Apex Print Hub" <quotes@apexprinthub.com>, <quotes@...>, or quotes@...).
+ * Rejects strings without an '@' symbol and domain dot, falling back safely.
+ */
+function extractBareEmail(candidate, fallback = DEFAULT_BRAND_EMAIL) {
+  if (typeof candidate !== 'string' || candidate.trim().length === 0) {
+    return fallback;
+  }
+  // Strip outer quotes and whitespace
+  const trimmed = candidate.trim().replace(/^["']|["']$/g, '').trim();
+  const angleMatch = trimmed.match(/<([^>]+)>/);
+  const candidateEmail = angleMatch ? angleMatch[1].trim() : trimmed;
+
+  // Basic email pattern validation: something@domain.tld
+  if (/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(candidateEmail)) {
+    return candidateEmail;
+  }
+  return fallback;
+}
+
+/**
+ * Extracts a display name from a sender string if present.
+ * If candidate contains angle brackets, extracts the phrase preceding '<'.
+ * Strips outer quotes and extra whitespace.
+ */
+function extractDisplayName(candidate) {
+  if (typeof candidate !== 'string' || candidate.trim().length === 0) {
+    return '';
+  }
+  const trimmed = candidate.trim().replace(/^["']|["']$/g, '').trim();
+  const angleIdx = trimmed.indexOf('<');
+  if (angleIdx > 0) {
+    const rawName = trimmed.slice(0, angleIdx).trim();
+    return rawName.replace(/^["']|["']$/g, '').trim();
+  }
+  return '';
+}
+
+/**
+ * Resolves an RFC 5322 compliant sender address string.
+ * Strictly guarantees `"Apex Print Hub" <quotes@apexprinthub.com>` format:
+ * 1. Double-quotes the display name cleanly without double-nesting (`""Apex Print Hub""`).
+ * 2. Wraps the bare email address in angle brackets: `<quotes@apexprinthub.com>`.
+ * 3. Gracefully recovers from malformed inputs: bare emails, angle-only strings,
+ *    outer-enclosing quotes, missing '@' names, and separate display name overrides.
+ */
+function resolveSenderAddress(customFrom) {
+  const candidate = customFrom || process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_FROM;
+
+  let brandName = (process.env.EMAIL_FROM_NAME || '').trim().replace(/^["']|["']$/g, '').trim();
+  let emailAddr = '';
+
+  if (candidate && typeof candidate === 'string' && candidate.trim().length > 0) {
+    const trimmed = candidate.trim().replace(/^["']|["']$/g, '').trim();
+    const extractedName = extractDisplayName(trimmed);
+    if (!brandName && extractedName) {
+      brandName = extractedName;
+    }
+    emailAddr = extractBareEmail(trimmed, '');
+  }
+
+  if (!brandName) {
+    brandName = DEFAULT_BRAND_NAME;
+  }
+  if (!emailAddr) {
+    emailAddr = DEFAULT_BRAND_EMAIL;
+  }
+
+  return `"${brandName}" <${emailAddr}>`;
+}
+
+/**
+ * Resolves a clean, bare email address for Reply-To.
+ * Guarantees that no display name or angle brackets remain, preventing HTML attribute corruption.
+ */
+function resolveReplyToAddress(customReplyTo) {
+  const candidate = customReplyTo || process.env.EMAIL_REPLY_TO;
+  return extractBareEmail(candidate, DEFAULT_BRAND_EMAIL);
+}
+
+/**
+ * Resolves a clean, bare email address for owner notifications.
+ */
+function resolveOwnerEmail() {
+  const candidate = process.env.OWNER_EMAIL;
+  return extractBareEmail(candidate, DEFAULT_BRAND_EMAIL);
+}
 
 function getTransporter() {
   // Test mode simulated transport for test environments with dummy credentials
@@ -15,10 +103,18 @@ function getTransporter() {
 
   // Custom SMTP configuration (e.g. mail.apexprinthub.com, Titan, SendGrid, etc.)
   if (process.env.SMTP_HOST || process.env.EMAIL_HOST) {
+    const port = parseInt(process.env.SMTP_PORT || process.env.EMAIL_PORT || '465', 10);
+    // Port 465 is implicit TLS (secure: true). Port 587 uses STARTTLS (secure: false).
+    const isSecureExplicit = process.env.SMTP_SECURE !== undefined
+      ? (process.env.SMTP_SECURE === 'true' || process.env.SMTP_SECURE === true)
+      : (process.env.EMAIL_SECURE !== undefined
+          ? (process.env.EMAIL_SECURE === 'true' || process.env.EMAIL_SECURE === true)
+          : port === 465);
+
     return nodemailer.createTransport({
       host: process.env.SMTP_HOST || process.env.EMAIL_HOST,
-      port: parseInt(process.env.SMTP_PORT || process.env.EMAIL_PORT || '465', 10),
-      secure: (process.env.SMTP_SECURE === 'false' || process.env.EMAIL_SECURE === 'false') ? false : true,
+      port,
+      secure: isSecureExplicit,
       auth: {
         user: process.env.SMTP_USER || process.env.EMAIL_USER,
         pass: process.env.SMTP_PASS || process.env.EMAIL_PASS
@@ -105,8 +201,8 @@ async function sendEmail({ to, subject, html, preheader, attachments, from, repl
       return false;
     }
 
-    const senderAddress = from || `"Apex Print Hub" <${EMAIL_FROM}>`;
-    const replyAddress = replyTo || EMAIL_REPLY_TO;
+    const senderAddress = resolveSenderAddress(from);
+    const replyAddress = resolveReplyToAddress(replyTo);
 
     const info = await activeTransporter.sendMail({
       from: senderAddress,
@@ -116,10 +212,29 @@ async function sendEmail({ to, subject, html, preheader, attachments, from, repl
       html: generateHtml(subject, html, preheader),
       attachments
     });
-    console.log(`✉️ Email successfully dispatched to ${to} (From: ${senderAddress}, Reply-To: ${replyAddress}, MessageID: ${info.messageId || 'mock'})`);
+
+    // Verify mail transport accepted the message and returned an identifiable messageId
+    if (!info || (!info.messageId && !isTestMock)) {
+      console.error(`❌ Email dispatch to ${to} rejected: No message ID returned by transport provider.`);
+      return false;
+    }
+
+    // Verify destination recipient was not rejected by the mail transport
+    if (info.rejected && info.rejected.length > 0 && info.rejected.includes(to)) {
+      console.error(`❌ Email dispatch to ${to} was rejected by mail provider. Rejected list: [${info.rejected.join(', ')}]`);
+      return false;
+    }
+
+    const acceptedRecipients = (info.accepted && info.accepted.length > 0) ? info.accepted.join(', ') : to;
+    const rejectedRecipients = (info.rejected && info.rejected.length > 0) ? info.rejected.join(', ') : 'none';
+    console.log(`✉️ Email successfully dispatched to ${to} | MessageID: ${info.messageId || 'mock'} | Accepted: [${acceptedRecipients}] | Rejected: [${rejectedRecipients}] | Response: ${info.response || '250 OK'}`);
     return true;
   } catch (error) {
-    console.error(`❌ Email send failed to ${to} [${error.code || 'UNKNOWN'}]:`, error.message);
+    const errCode = error.code || 'UNKNOWN';
+    const responseCode = error.responseCode || (error.response && error.response.slice(0, 3)) || 'N/A';
+    const command = error.command || 'N/A';
+    const serverResponse = error.response || error.message;
+    console.error(`❌ Email send failed to ${to} | TransportCode: ${errCode} | ResponseCode: ${responseCode} | Command: ${command} | Detail: ${error.message} ${error.response ? `| ServerResponse: ${serverResponse}` : ''}`);
     return false;
   }
 }
@@ -185,8 +300,8 @@ async function notifyOwnerNewContact(data) {
   `;
 
   const mailOptions = {
-    to: OWNER_EMAIL,
-    from: `"Apex Print Hub" <${EMAIL_FROM}>`,
+    to: resolveOwnerEmail(),
+    from: resolveSenderAddress(),
     replyTo: data.email,
     subject: `📨 New Order Request: ${data.service} — ${data.name}`,
     preheader: `New order request submitted by ${data.name} for ${data.service}.`,
@@ -298,14 +413,14 @@ async function confirmCustomerContact(data) {
     <p style="font-size: 14px; color: #888888; margin-bottom: 0;">
       Warm regards,<br>
       <strong style="color: #FFFFFF;">The Apex Print Hub Production Team</strong><br>
-      <a href="mailto:${EMAIL_REPLY_TO}" style="color: #C9A84C; text-decoration: none;">${EMAIL_REPLY_TO}</a>
+      <a href="mailto:${resolveReplyToAddress()}" style="color: #C9A84C; text-decoration: none;">${resolveReplyToAddress()}</a>
     </p>
   `;
 
   return sendEmail({
     to: data.email,
-    from: `"Apex Print Hub" <${EMAIL_FROM}>`,
-    replyTo: EMAIL_REPLY_TO,
+    from: resolveSenderAddress(),
+    replyTo: resolveReplyToAddress(),
     subject: `Order Request Received: ${data.service} — Apex Print Hub`,
     preheader: `Thank you for your order request for ${data.service}. Our team will contact you shortly.`,
     html
@@ -349,8 +464,8 @@ async function notifyOwnerNewQuote(data) {
   `;
 
   return sendEmail({
-    to: OWNER_EMAIL,
-    from: `"Apex Print Hub" <${EMAIL_FROM}>`,
+    to: resolveOwnerEmail(),
+    from: resolveSenderAddress(),
     replyTo: data.email,
     subject: `📋 Direct Quote Request: ${data.service} — ${data.name}`,
     preheader: `Direct quote request from ${data.name} for ${data.service}.`,
@@ -398,14 +513,14 @@ async function confirmCustomerQuote(data) {
     <p style="font-size: 14px; color: #888888; margin-bottom: 0;">
       Best regards,<br>
       <strong style="color: #FFFFFF;">The Apex Print Hub Estimation Team</strong><br>
-      <a href="mailto:${EMAIL_REPLY_TO}" style="color: #C9A84C; text-decoration: none;">${EMAIL_REPLY_TO}</a>
+      <a href="mailto:${resolveReplyToAddress()}" style="color: #C9A84C; text-decoration: none;">${resolveReplyToAddress()}</a>
     </p>
   `;
 
   return sendEmail({
     to: data.email,
-    from: `"Apex Print Hub" <${EMAIL_FROM}>`,
-    replyTo: EMAIL_REPLY_TO,
+    from: resolveSenderAddress(),
+    replyTo: resolveReplyToAddress(),
     subject: `Quote Request Confirmation: ${data.service} — Apex Print Hub`,
     preheader: `We have received your quotation request for ${data.service}.`,
     html
@@ -416,5 +531,16 @@ module.exports = {
   notifyOwnerNewContact,
   confirmCustomerContact,
   notifyOwnerNewQuote,
-  confirmCustomerQuote
+  confirmCustomerQuote,
+  resolveSenderAddress,
+  resolveReplyToAddress,
+  resolveOwnerEmail,
+  extractBareEmail,
+  extractDisplayName,
+  getTransporter,
+  DEFAULT_BRAND_NAME,
+  DEFAULT_BRAND_EMAIL,
+  DEFAULT_BRAND_SENDER,
+  sendEmail
 };
+

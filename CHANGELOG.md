@@ -158,3 +158,22 @@ Initial tracking of project changes.
   - Added robust pointer gesture disambiguation (`Math.hypot(dx, dy) > 7px`) ensuring drag/swipe motion glides freely without firing accidental modal opens.
 - **Verification**:
   - 100% automated pass on comprehensive 6-stage test suite (`scripts/test-carousel-comprehensive.js`), regression modal test (`scripts/verify-fixes.js`), process section test (`scripts/verify-process-why-apex.js`), and end-to-end cart test (`scripts/test-artwork-flow.js`).
+
+---
+
+## Phase 1 — Transactional Email Sender Identity Configuration & Gmail SMTP Audit — 2026-09-08
+- **Transactional Mailer Brand Sender Resolution (`backend/services/email.js`)**:
+  - Implemented `resolveSenderAddress()`, strictly defaulting to `"Apex Print Hub" <quotes@apexprinthub.com>` while cleanly supporting `EMAIL_FROM_ADDRESS`, `EMAIL_FROM`, and `EMAIL_FROM_NAME` without nested angle brackets or quote corruptions.
+  - Implemented `resolveReplyToAddress()` and `resolveOwnerEmail()` ensuring strict RFC 5322 compliance across customer receipts (`quotes@apexprinthub.com`) and owner notifications.
+  - Exported address resolvers for granular unit testing and isolated test assertion.
+- **Environment Variable & Relay Audit (`backend/.env`, `backend/.env.example`)**:
+  - Added `EMAIL_FROM_ADDRESS="Apex Print Hub" <quotes@apexprinthub.com>` and `EMAIL_FROM_NAME="Apex Print Hub"` to local `.env` and production Vercel project environment variables.
+  - Documented custom domain SMTP configuration (`mail.apexprinthub.com` on port 465/587) in `.env.example`.
+  - Audited live IMAP sent headers on Gmail SMTP demonstrating the exact rewriting behavior in real-time.
+- **Verification & Review Hardening (Review Round 2)**:
+  - Hardened address parsing with `extractBareEmail()` and `extractDisplayName()`, eliminating unquoted display name bugs, outer-quote enclosing bugs, double-quote bugs, and invalid non-email fallbacks.
+  - Protected HTML email templates against `mailto:` attribute syntax corruption by strictly normalizing Reply-To addresses to bare emails.
+  - Corrected custom SMTP transporter port detection so port 587 defaults to `secure: false` (STARTTLS) and port 465 to `secure: true` (SSL).
+  - Expanded `tests/sender-address-configuration.test.js` from 10 to 19 automated tests, including Nodemailer `addressparser` validation and HTML template safety checks.
+  - All verification suites passing: `tests/sender-address-configuration.test.js` (19/19), `tests/unit-email-contact.test.js` (5/5), `tests/phase1-submission-pipeline.test.js` (10/10), `tests/email-delivery-failure.test.js` (4/4), `scripts/verify-phase1.js` (100% passing).
+

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { supabase } = require('../services/supabase');
-const { notifyOwnerNewQuote, confirmCustomerQuote } = require('../services/email');
+const { notifyOwnerNewQuote, confirmCustomerQuote, resolveOwnerEmail } = require('../services/email');
 const { validateQuote, checkValidation } = require('../middleware/validate');
 const { contactLimiter } = require('../middleware/rateLimiter');
 
@@ -55,22 +55,29 @@ router.post('/', contactLimiter, validateQuote, checkValidation, async (req, res
       }
 
       if (Array.isArray(emailRace)) {
+        if (emailRace[0]?.status === 'rejected') {
+          console.error('❌ Owner quote notification promise rejected:', emailRace[0].reason);
+        }
+        if (emailRace[1]?.status === 'rejected') {
+          console.error('❌ Customer quote confirmation promise rejected:', emailRace[1].reason);
+        }
         ownerEmailSent = emailRace[0]?.status === 'fulfilled' && (emailRace[0].value === true || emailRace[0].value?.success === true);
         customerEmailSent = emailRace[1]?.status === 'fulfilled' && (emailRace[1].value === true || emailRace[1].value?.success === true);
       }
+      console.log(`📊 Quote submission email dispatch: Owner Alert (${resolveOwnerEmail()}): ${ownerEmailSent ? 'ACCEPTED' : 'FAILED'}, Customer Confirmation (${email}): ${customerEmailSent ? 'ACCEPTED' : 'FAILED'}`);
     } catch (emailErr) {
       console.error('❌ Quote email dispatch notification error:', emailErr.message);
     }
 
-    // Crucial: Validate owner notification delivery to quotes@apexprinthub.com
+    // Crucial: Validate owner notification delivery
     if (!ownerEmailSent) {
       const isMissingCreds = (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) && !process.env.SMTP_HOST && process.env.NODE_ENV !== 'test';
       const statusCode = isMissingCreds ? 503 : 500;
       const userMessage = isMissingCreds
-        ? "Our email dispatch system is momentarily offline for configuration. Please email your quotation request directly to quotes@apexprinthub.com."
-        : "We were unable to deliver your quote request notification email to our team. Please contact us directly at quotes@apexprinthub.com or try again shortly.";
+        ? `Our email dispatch system is momentarily offline for configuration. Please email your quotation request directly to ${resolveOwnerEmail()}.`
+        : `We were unable to deliver your quote request notification email to our team. Please contact us directly at ${resolveOwnerEmail()} or try again shortly.`;
 
-      console.error('❌ Quote submission failed: Destination email delivery to quotes@apexprinthub.com could not be confirmed.');
+      console.error(`❌ Quote submission failed: Destination email delivery to ${resolveOwnerEmail()} could not be confirmed.`);
 
       return res.status(statusCode).json({
         success: false,
@@ -79,10 +86,16 @@ router.post('/', contactLimiter, validateQuote, checkValidation, async (req, res
       });
     }
 
+    if (!customerEmailSent) {
+      console.warn(`⚠️ Warning: Quote request was delivered to ${resolveOwnerEmail()}, but customer confirmation email to "${email}" failed or was rejected.`);
+    }
+
     // 3. Return standardized API success contract
     return res.status(200).json({
       success: true,
-      message: "Thank you! Your quote request has been received. Our team will contact you shortly with custom pricing and specifications.",
+      message: customerEmailSent
+        ? "Thank you! Your quote request has been received and a confirmation email has been sent. Our team will contact you shortly with custom pricing and specifications."
+        : "Thank you! Your quote request has been received by our estimators. Our team will contact you shortly with custom pricing and specifications.",
       customerEmailSent
     });
 

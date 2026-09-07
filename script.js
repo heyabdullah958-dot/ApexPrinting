@@ -838,10 +838,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (formSuccess) {
                         formSuccess.style.display = 'block';
                         formSuccess.style.animation = 'fadeIn 0.5s ease backwards';
+                        const successTextEl = formSuccess.querySelector('p');
+                        if (successTextEl && result.message) {
+                            successTextEl.textContent = result.message;
+                        }
                         formSuccess.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                     if (typeof window.showToast === 'function') {
-                        window.showToast('Your order request has been submitted successfully!', 'success');
+                        const toastMsg = (result.customerEmailSent === false)
+                            ? 'Order received! Our production team will contact you shortly.'
+                            : 'Your order request has been submitted successfully! Check your email for confirmation.';
+                        window.showToast(toastMsg, 'success');
                     }
                 } catch (error) {
                     console.error('Error submitting form:', error);
