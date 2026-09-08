@@ -105,3 +105,25 @@ Components like Navbar, Hero, and Forms are implemented natively in the DOM.
 - Files modified: `index.html`, `style.css`, `script.js`.
 - Verification: 100% automated pass on `scripts/test-carousel-comprehensive.js` (6 stages), `scripts/verify-fixes.js`, `scripts/verify-process-why-apex.js`, and `scripts/test-artwork-flow.js`.
 - Confidence: 100% — Verified on desktop (1440x960), tablet (768x1024), and mobile (390x844).
+
+---
+
+## Phase 1 — Product Catalog Pruning & Customization Options Alignment — 2026-09-08
+- **Carousel Track & DOM Alignment (`index.html`)**:
+  - Excised 3 obsolete cards from `#cylinderCarouselTrack`: Editorial Brochures, Corporate Booklets, and Exhibition Posters (reducing total cards from 16 to 13).
+  - Renamed Card 8 heading, `aria-label`, and `alt` to "Letterhead" (removed "Executive").
+  - Cleaned card subtitles: updated Business Cards to "Foil Stamped, Embossed & 350 GSM" and Presentation Folders to "Die-Cut & Matt Lamination".
+  - Updated Category 1 tag from "Executive Letterhead" to "Letterhead".
+- **Customizer Schema Alignment (`script.js`)**:
+  - Envelopes: Stripped "Sides" dropdown from options schema.
+  - Presentation Folders: Stripped "Pockets" dropdown from options schema.
+  - Brochures: Renamed "Lamination" selection to "Paper Finish" ("Matt", "Glossy").
+  - Paper Stock: Standardized strictly to "300 GSM" and "350 GSM" across applicable items (removed 14pt, 16pt, 450+ GSM).
+  - Corners: Standardized strictly to "Straight Cut" and "Round Corner".
+  - Letterhead: Renamed key and modal title from "Executive Letterhead" to "Letterhead".
+- **State Migration & URL Pre-fill (`script.js`, `contact.html`)**:
+  - Created `sanitizeCart(cartItems)` to migrate stale localStorage carts seamlessly without breaking checkout payloads.
+  - Fixed service pre-selection logic on `contact.html` by skipping empty `<option value="">` placeholders.
+  - Enabled automatic modal deep-linking via URL query params (`?product=` / `?open=`).
+- Files modified: `index.html`, `script.js`, `contact.html`.
+- Verification: Playwright test suite `scripts/test-phase1-catalog-alignment.js` (10/10 suites passing, 100% success).

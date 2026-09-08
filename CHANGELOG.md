@@ -177,3 +177,25 @@ Initial tracking of project changes.
   - Expanded `tests/sender-address-configuration.test.js` from 10 to 19 automated tests, including Nodemailer `addressparser` validation and HTML template safety checks.
   - All verification suites passing: `tests/sender-address-configuration.test.js` (19/19), `tests/unit-email-contact.test.js` (5/5), `tests/phase1-submission-pipeline.test.js` (10/10), `tests/email-delivery-failure.test.js` (4/4), `scripts/verify-phase1.js` (100% passing).
 
+---
+
+## Phase 1 — Product Catalog Pruning & Customization Options Alignment — 2026-09-08
+- **Product Catalog Pruning (`index.html`, `script.js`)**:
+  - Excised 3 specific products from 3D cylinder carousel and catalog: Editorial Brochures, Corporate Booklets, and Exhibition Posters. Total cards cleanly reduced from 16 to 13.
+  - Dynamic carousel geometry in `init3DCurvedCarousel` automatically recalculates step angle ($\theta = 360^\circ / 13 \approx 27.69^\circ$) without visual jumps or broken offsets.
+- **Product Naming & Subtitle Clean-up (`index.html`, `script.js`, `contact.html`)**:
+  - Renamed "Executive Letterhead" strictly to "Letterhead" across `index.html` (Card 8 heading, `aria-label`, image `alt`), `contact.html` service dropdown, and `script.js` (`PRODUCT_DATA` key and title).
+  - Cleaned card subtitles: Business Cards subtitle updated to "Foil Stamped, Embossed & 350 GSM" (removed 450+ GSM); Presentation Folders subtitle updated to "Die-Cut & Matt Lamination" (removed Die-Cut Pockets).
+- **Modal Customization Options Alignment (`script.js`)**:
+  - *Envelopes*: Completely removed "Sides" option dropdown.
+  - *Presentation Folders*: Completely removed "Pockets" option dropdown.
+  - *Brochures*: Renamed "Lamination" selection label strictly to "Paper Finish" ("Matt", "Glossy").
+  - *Paper Stock*: Restricted stock variations strictly to "300 GSM" and "350 GSM" across all applicable products (excised 14pt, 16pt, 450+ GSM).
+  - *Corner Selection*: Restricted corner options strictly to "Straight Cut" and "Round Corner".
+- **Cart Schema Migration & URL Pre-fill Resilience (`script.js`, `contact.html`)**:
+  - Implemented `sanitizeCart(cartItems)` runtime migration on cart load, `addToCart`, and `saveCart` to automatically cleanse stale client `localStorage`, purging obsolete "Sides" and "Pockets", migrating "Lamination" to "PAPER FINISH", and updating product titles.
+  - Fixed service query pre-fill matching loop on `contact.html` (`if (!optVal) continue;`), preventing empty `<option value="">` placeholder from falsely matching query strings.
+  - Protected explicit URL query parameters from being overridden during checkout review re-renders.
+- **Verification**:
+  - Verified with dedicated 10-suite Playwright test `scripts/test-phase1-catalog-alignment.js` (10/10 passed).
+  - Regression verified with `scripts/verify-fixes.js`, `tests/sender-address-configuration.test.js`, `scripts/verify-process-why-apex.js`, and `scripts/test-artwork-flow.js`.

@@ -159,3 +159,33 @@ Initial tracking of project bugs and fixes.
   5. *Invalid Name-Only Fallback*: When given a non-email candidate without an `@` (e.g. `'Apex Print Hub'`), prior code generated `<Apex Print Hub>`. New implementation detects missing `@` and falls back safely to `quotes@apexprinthub.com`.
   6. *Expanded Automated Test Suite*: Expanded `tests/sender-address-configuration.test.js` from 10 to 19 automated tests covering unquoted names, outer enclosing quotes, name-only fallbacks, anti-double-quotes, HTML `mailto:` safety, port 587 STARTTLS, and RFC 5322 compliance with Nodemailer's native `addressparser`.
 - **Confidence**: 100% — Fully verified with 19-point automated test suite, unit tests, pipeline tests, and live IMAP header inspection.
+
+---
+
+## Phase 1 — Product Catalog Pruning & Customization Options Alignment — 2026-09-08
+- **Symptom**:
+  1. *Catalog Over-Specification*: Three obsolete product lines (Editorial Brochures, Corporate Booklets, and Exhibition Posters) were cluttering the 3D cylinder carousel and homepage showcase.
+  2. *Naming Inconsistency*: Letterhead was labeled "Executive Letterhead", diverging from simplified brand guidelines.
+  3. *Redundant / Inaccurate Specification Options*:
+     - Envelopes offered an unnecessary "Sides" dropdown (printing on envelopes is single-side standard).
+     - Presentation Folders offered a redundant "Pockets" dropdown.
+     - Brochures labeled paper finish as "Lamination".
+     - Paper stocks included non-standard options (14pt, 16pt, 450+ GSM).
+     - Corner cuts included non-standard variations outside straight and round.
+  4. *Empty Option Matching Bug on Pre-fill*: When deep-linking to `contact.html?service=Letterhead`, JavaScript's `canonicalKey.includes("")` matched the placeholder `<option value="">Select a service</option>` because `optVal = ""`, resetting the selection to "Other / Custom".
+- **Root Cause**:
+  1. Static card elements in `index.html` were explicitly hardcoded for 16 products instead of 13.
+  2. `PRODUCT_DATA` in `script.js` retained legacy print parameters from earlier prototypes.
+  3. The service dropdown matching algorithm checked string containment without verifying that `optVal` was non-empty.
+  4. Existing customer browser sessions retained obsolete options in `localStorage['apex_cart']`.
+- **Fix**:
+  1. Removed Editorial Brochures, Corporate Booklets, and Exhibition Posters cards from `index.html`. The 3D cylinder carousel track dynamically re-computes radial coordinates for 13 items ($\approx 27.69^\circ$).
+  2. Renamed "Executive Letterhead" to "Letterhead" across `index.html`, `script.js`, and `contact.html`.
+  3. Pruned `PRODUCT_DATA`: stripped "Sides" from Envelopes; stripped "Pockets" from Presentation Folders; renamed "Lamination" to "Paper Finish" ("Matt", "Glossy") in Brochures; restricted Paper Stock strictly to "300 GSM" & "350 GSM"; restricted Corners strictly to "Straight Cut" & "Round Corner".
+  4. Implemented `sanitizeCart()` in `script.js` executing on load, add, and save to purge obsolete options from existing stored carts.
+  5. Guarded query string option matching loop with `if (!optVal) continue;`, resolving the empty string placeholder collision.
+- **Verification**:
+  - Created and executed Playwright test suite `scripts/test-phase1-catalog-alignment.js` (10/10 test suites passing 100%).
+  - Verified zero layout shift, zero broken geometry on 13-card cylinder carousel, and zero console errors.
+  - Regression verified across `scripts/verify-fixes.js`, `tests/sender-address-configuration.test.js`, `scripts/verify-process-why-apex.js`, and `scripts/test-artwork-flow.js`.
+- **Confidence**: 100% — Verified across DOM, localStorage migration, and automated interaction suites.

@@ -528,16 +528,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 6. Pre-fill Service Dropdown from URL Params (contact.html)
     const urlParams = new URLSearchParams(window.location.search);
-    const serviceParam = urlParams.get('service');
+    const serviceParam = urlParams.get('service') || urlParams.get('product');
     const serviceDropdown = document.getElementById('service');
     
     if (serviceParam && serviceDropdown) {
-        // Attempt to select the requested service
+        const canonicalKey = (typeof getCompetitorKey === 'function') ? getCompetitorKey(serviceParam).toLowerCase() : serviceParam.trim().toLowerCase();
+        const normParam = serviceParam.trim().toLowerCase();
         const options = serviceDropdown.options;
+        let matched = false;
         for (let i = 0; i < options.length; i++) {
-            if (options[i].value === serviceParam) {
+            const optVal = options[i].value.toLowerCase().trim();
+            if (!optVal) continue;
+            const optText = options[i].textContent.toLowerCase().trim();
+            if (optVal === canonicalKey || optVal === normParam || optText === canonicalKey || optText === normParam ||
+                optVal.includes(canonicalKey) || (canonicalKey && canonicalKey.includes(optVal))) {
                 serviceDropdown.selectedIndex = i;
+                matched = true;
                 break;
+            }
+        }
+        if (!matched) {
+            const packagingList = ['paper bags', 'gift boxes', 'packaging boxes', 'hang tags', 'shipping boxes'];
+            if (packagingList.includes(normParam) || packagingList.includes(canonicalKey)) {
+                let pkgIdx = -1;
+                for (let i = 0; i < options.length; i++) {
+                    if (options[i].value.toLowerCase() === 'packaging' || options[i].textContent.toLowerCase().includes('packaging')) {
+                        pkgIdx = i;
+                        break;
+                    }
+                }
+                if (pkgIdx !== -1) {
+                    serviceDropdown.selectedIndex = pkgIdx;
+                } else {
+                    serviceDropdown.value = "Other";
+                }
+            } else {
+                serviceDropdown.value = "Other";
             }
         }
     }
@@ -1117,10 +1143,10 @@ const PRODUCT_DATA = {
         desc: "Make a lasting first impression with premium business cards. Choose from luxury finishes, special effects, and multiple sizes.",
         requiresQuote: false,
         options: {
-            "Paper Stock": { "Standard 14pt / 300 GSM": 0, "Premium 16pt / 350 GSM": 3, "Luxury 450+ GSM": 8 },
+            "Paper Stock": { "300 GSM": 0, "350 GSM": 3 },
             "Sides": { "One Side": 0, "Both Sides": 2 },
             "Lamination": { "No Lamination": 0, "Matt Lamination": 2, "Gloss Lamination": 2 },
-            "Corners": { "Straight Cut": 0, "Round Corners 3mm": 1.5, "Round Corners 6mm": 1.5, "Custom Shape": 5 },
+            "Corners": { "Straight Cut": 0, "Round Corner": 1.5 },
             "Special Effects": { "None": 0, "Spot UV Coating": 4, "Embossing": 6, "Foil Stamping": 7 },
             "Quantity": { "50 units": 0, "100 units": 0, "250 units": 8, "500 units": 15, "1000 units": 25 }
         }
@@ -1157,7 +1183,6 @@ const PRODUCT_DATA = {
             "Size": { "9x12\" (With Pockets)": "9*12_pockets", "12x18\" (Die Cut, No Pockets)": "12*18_die_cut" },
             "Paper Stock": { "300 GSM": "300gsm", "350 GSM": "350gsm" },
             "Sides": { "One Side": "one_side", "Both Sides": "both_sides" },
-            "Pockets": { "Right Pocket Only": "right_pocket", "Both Pockets": "both_pockets" },
             "Lamination": { "No Lamination": "no_lamination", "Matt Lamination": "lamination", "Gloss Lamination": "lamination" },
             "Quantity": { "100 units": "100", "250 units": "250", "500 units": "500", "1000 units": "1000", "2000 units": "2000", "3000 units": "3000", "5000 units": "5000" }
         }
@@ -1180,7 +1205,6 @@ const PRODUCT_DATA = {
         requiresQuote: false,
         options: {
             "Size": { "4.25x6.25\" (Invitation)": 0, "4.125x9.5\" (Standard)": 0, "6\"x9\"": 1.5, "3.875\"x8.875\"": 1, "9\"x12\"": 2, "5.25\"x7.25\"": 0.5 },
-            "Sides": { "One Side": 0, "Both Sides": 2 },
             "Quantity": { "50 units": 0, "100 units": 0, "250 units": 7, "500 units": 13 }
         }
     },
@@ -1203,7 +1227,7 @@ const PRODUCT_DATA = {
             "Size": { "6x9\"": "8.5*12", "8.5x11\"": "8.5*12", "11x17\"": "17*12", "11.5x24\"": "11*24" },
             "Paper Stock": { "113 GSM": "113GSM", "128 GSM": "128GSM", "148 GSM": "148GSM" },
             "Fold Type": { "Bi-fold": "Bi-fold", "Tri-fold": "Tri-fold", "Gate Fold": "Gate Fold", "Z-fold": "Z-fold" },
-            "Lamination": { "Matt": "Matt", "Glossy": "Glossy" },
+            "Paper Finish": { "Matt": "Matt", "Glossy": "Glossy" },
             "Quantity": { "100 units": "100", "250 units": "250", "500 units": "500", "1000 units": "1000", "2000 units": "2000", "3000 units": "3000", "5000 units": "5000" }
         }
     },
@@ -1289,7 +1313,7 @@ const PRODUCT_DATA = {
         requiresQuote: true,
         options: {
             "Size": { "Standard Rectangular (2\"x3.5\")": 0, "Circular (2.5\")": 2, "Folded Tag": 3 },
-            "Paper Stock": { "14pt Matte Cardstock": 0, "16pt Gloss Cardstock": 1.5, "Natural Kraft Cardstock": 2 },
+            "Paper Stock": { "300 GSM": 0, "350 GSM": 1.5 },
             "Quantity": { "100 units": 0, "250": 6, "500": 12 }
         }
     },
@@ -1366,25 +1390,28 @@ const PRODUCT_DATA = {
 // Map card titles to PRODUCT_DATA keys
 function getCompetitorKey(title) {
     const norm = title.trim().toLowerCase();
-    if (norm === 'business card') return 'Business Cards';
-    if (norm === 'flyer') return 'Flyers';
-    if (norm === 'notepad') return 'Notepads';
-    if (norm === 'note pads') return 'Notepads';
-    if (norm === 'brochure') return 'Brochures';
-    if (norm === 'booklet') return 'Booklets';
+    if (norm === 'business card' || norm === 'business cards' || norm === 'luxury business cards') return 'Business Cards';
+    if (norm === 'flyer' || norm === 'flyers' || norm === 'marketing flyers') return 'Flyers';
+    if (norm === 'notepad' || norm === 'note pads' || norm === 'notepads' || norm === 'premium note pads') return 'Notepads';
+    if (norm === 'brochure' || norm === 'brochures' || norm === 'editorial brochures') return 'Brochures';
+    if (norm === 'booklet' || norm === 'booklets' || norm === 'corporate booklets') return 'Booklets';
+    if (norm === 'poster' || norm === 'posters' || norm === 'exhibition posters') return 'Posters';
+    if (norm === 'letterhead' || norm === 'letterheads' || norm === 'executive letterhead' || norm === 'executive letterheads') return 'Letterhead';
+    if (norm === 'presentation folder' || norm === 'presentation folders') return 'Presentation Folders';
+    if (norm === 'envelope' || norm === 'envelopes') return 'Envelopes';
     if (norm === 'promotional pads') return 'Promotional Pads';
     if (norm === 'ncr forms') return 'NCR Forms';
-    if (norm === 'paper bags') return 'Paper Bags';
-    if (norm === 'gift boxes') return 'Gift Boxes';
+    if (norm === 'paper bags' || norm === 'luxury paper bags') return 'Paper Bags';
+    if (norm === 'gift boxes' || norm === 'rigid gift boxes') return 'Gift Boxes';
     if (norm === 'packaging boxes') return 'Packaging Boxes';
     if (norm === 'hang tags') return 'Hang Tags';
     if (norm === 'shipping boxes') return 'Shipping Boxes';
-    if (norm === 'mugs') return 'Mugs';
+    if (norm === 'mugs' || norm === 'travel & ceramic mugs') return 'Mugs';
     if (norm === 'magic mugs') return 'Magic Mugs';
     if (norm === 'caps') return 'Caps';
-    if (norm === 't-shirts') return 'T-Shirts';
-    if (norm === 'pens') return 'Pens';
-    if (norm === 'water bottles') return 'Water Bottles';
+    if (norm === 't-shirts' || norm === 'corporate apparel') return 'T-Shirts';
+    if (norm === 'pens' || norm === 'executive stylus pens') return 'Pens';
+    if (norm === 'water bottles' || norm === 'smart thermal bottles') return 'Water Bottles';
     
     // Fallback search
     for (const key of Object.keys(PRODUCT_DATA)) {
@@ -1632,7 +1659,6 @@ window.updatePrice = function() {
         let size = '9*12_pockets';
         let stock = '300gsm';
         let sides = 'one_side';
-        let pockets = 'right_pocket';
         let lamination = 'no_lamination';
         let qty = 100;
         
@@ -1642,23 +1668,9 @@ window.updatePrice = function() {
             if (optName === 'Size') size = select.value;
             if (optName === 'Paper Stock') stock = select.value;
             if (optName === 'Sides') sides = select.value;
-            if (optName === 'Pockets') pockets = select.value;
             if (optName === 'Lamination') lamination = select.value;
             if (optName === 'Quantity') qty = parseInt(select.value || 100);
         });
-        
-        // Hide/Show Pockets dropdown based on selected Size
-        const pocketsSelect = Array.from(selects).find(s => s.dataset.optionName === 'Pockets');
-        if (pocketsSelect) {
-            const pocketsGroup = pocketsSelect.closest('.form-group');
-            if (pocketsGroup) {
-                if (size === '12*18_die_cut') {
-                    pocketsGroup.style.display = 'none';
-                } else {
-                    pocketsGroup.style.display = 'block';
-                }
-            }
-        }
         
         let pkrPrice = 0;
         try {
@@ -1905,14 +1917,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const serviceSelect = document.getElementById('service');
     const messageTextarea = document.getElementById('message');
     const urlParams = new URLSearchParams(window.location.search);
-    const serviceParam = urlParams.get('service');
+    const serviceParam = urlParams.get('service') || urlParams.get('product');
     const detailsParam = urlParams.get('details');
     
     if (serviceSelect && serviceParam) {
+        const canonicalKey = (typeof getCompetitorKey === 'function') ? getCompetitorKey(serviceParam).toLowerCase() : serviceParam.trim().toLowerCase();
+        const normParam = serviceParam.trim().toLowerCase();
         let found = false;
         for (let i = 0; i < serviceSelect.options.length; i++) {
-            if (serviceSelect.options[i].value.toLowerCase() === serviceParam.toLowerCase() || 
-                serviceSelect.options[i].textContent.toLowerCase().includes(serviceParam.toLowerCase())) {
+            const optVal = serviceSelect.options[i].value.toLowerCase().trim();
+            if (!optVal) continue;
+            const optText = serviceSelect.options[i].textContent.toLowerCase().trim();
+            if (optVal === canonicalKey || optVal === normParam || optText === canonicalKey || optText === normParam ||
+                optVal.includes(canonicalKey) || (canonicalKey && canonicalKey.includes(optVal))) {
                 serviceSelect.selectedIndex = i;
                 found = true;
                 break;
@@ -1920,8 +1937,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (!found) {
             const packagingList = ['paper bags', 'gift boxes', 'packaging boxes', 'hang tags', 'shipping boxes'];
-            if (packagingList.includes(serviceParam.toLowerCase())) {
-                serviceSelect.value = "Packaging";
+            if (packagingList.includes(normParam) || packagingList.includes(canonicalKey)) {
+                let pkgIdx = -1;
+                for (let i = 0; i < serviceSelect.options.length; i++) {
+                    if (serviceSelect.options[i].value.toLowerCase() === 'packaging' || serviceSelect.options[i].textContent.toLowerCase().includes('packaging')) {
+                        pkgIdx = i;
+                        break;
+                    }
+                }
+                if (pkgIdx !== -1) {
+                    serviceSelect.selectedIndex = pkgIdx;
+                } else {
+                    serviceSelect.value = "Other";
+                }
             } else {
                 serviceSelect.value = "Other";
             }
@@ -2372,6 +2400,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target === productModalOverlay) window.closeProductModal();
         });
     }
+
+    // Deep-linking: Auto-open modal if ?product= or ?open= specified in URL
+    const autoOpenProduct = urlParams.get('product') || urlParams.get('open');
+    if (autoOpenProduct && typeof window.openProductModal === 'function') {
+        const canonicalKey = getCompetitorKey(autoOpenProduct);
+        if (PRODUCT_DATA[canonicalKey]) {
+            setTimeout(() => {
+                window.openProductModal(canonicalKey);
+            }, 300);
+        }
+    }
 });
 
 // --- TOAST NOTIFICATIONS ---
@@ -2405,10 +2444,78 @@ window.showToast = function(message, type = 'info') {
 };
 
 // --- CART SYSTEM ---
-let cart = JSON.parse(localStorage.getItem('apex_cart') || '[]');
+function sanitizeCart(cartItems) {
+    if (!Array.isArray(cartItems)) return [];
+    let hasChanges = false;
+    const cleaned = cartItems.map(item => {
+        if (!item || typeof item !== 'object') return item;
+        let modified = false;
+
+        // 1. Sanitize product title
+        let title = (item.title || '').trim();
+        const norm = title.toLowerCase();
+        if (norm === 'executive letterhead' || norm === 'executive letterheads' || norm === 'letterheads') {
+            title = 'Letterhead';
+            modified = true;
+        } else if (norm === 'editorial brochures') {
+            title = 'Brochures';
+            modified = true;
+        } else if (norm === 'corporate booklets') {
+            title = 'Booklets';
+            modified = true;
+        } else if (norm === 'exhibition posters') {
+            title = 'Posters';
+            modified = true;
+        }
+
+        // 2. Sanitize options
+        let options = item.options;
+        if (Array.isArray(options)) {
+            const initialLen = options.length;
+            const filtered = options
+                .filter(opt => {
+                    if (!opt || !opt.label) return false;
+                    const label = opt.label.trim().toLowerCase();
+                    // Envelopes: remove Sides
+                    if (title === 'Envelopes' && (label === 'sides' || label.includes('side'))) return false;
+                    // Presentation Folders: remove Pockets
+                    if (title === 'Presentation Folders' && (label === 'pockets' || label.includes('pocket'))) return false;
+                    return true;
+                })
+                .map(opt => {
+                    const label = opt.label.trim();
+                    // Brochures: rename Lamination to Paper Finish
+                    if (title === 'Brochures' && label.toLowerCase().includes('lamination')) {
+                        modified = true;
+                        return { ...opt, label: 'PAPER FINISH' };
+                    }
+                    return opt;
+                });
+
+            if (filtered.length !== initialLen) {
+                modified = true;
+            }
+            options = filtered;
+        }
+
+        if (modified) hasChanges = true;
+        return { ...item, title, options };
+    });
+
+    if (hasChanges) {
+        try {
+            localStorage.setItem('apex_cart', JSON.stringify(cleaned));
+        } catch (e) {}
+    }
+    return cleaned;
+}
+window.sanitizeCart = sanitizeCart;
+
+let cart = sanitizeCart(JSON.parse(localStorage.getItem('apex_cart') || '[]'));
 
 function saveCart() {
     try {
+        cart = sanitizeCart(cart);
         localStorage.setItem('apex_cart', JSON.stringify(cart));
     } catch (err) {
         console.warn('Could not save cart to localStorage:', err);
@@ -2431,16 +2538,18 @@ function updateCartCount() {
 document.addEventListener('DOMContentLoaded', updateCartCount);
 
 window.addToCart = function(item) {
+    const cleanList = sanitizeCart([item]);
+    const cleanItem = cleanList[0] || item;
     const existingItem = cart.find(i => 
-        i.title === item.title && 
-        JSON.stringify(i.options) === JSON.stringify(item.options) &&
-        JSON.stringify(i.design) === JSON.stringify(item.design)
+        i.title === cleanItem.title && 
+        JSON.stringify(i.options) === JSON.stringify(cleanItem.options) &&
+        JSON.stringify(i.design) === JSON.stringify(cleanItem.design)
     );
     if (existingItem) {
         existingItem.quantity = (existingItem.quantity || 1) + 1;
     } else {
-        item.quantity = 1;
-        cart.push(item);
+        cleanItem.quantity = 1;
+        cart.push(cleanItem);
     }
     saveCart();
 };
@@ -2975,9 +3084,11 @@ window.renderCheckoutOrderReview = function() {
         }
     }
 
-    // Auto-select service as Custom Order if empty
+    // Auto-select service as Custom Order if empty and no explicit URL parameter was provided
     const serviceSelect = document.getElementById('service');
-    if (serviceSelect && (!serviceSelect.value || serviceSelect.value === 'General Inquiry')) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasServiceParam = !!(urlParams.get('service') || urlParams.get('product'));
+    if (serviceSelect && !hasServiceParam && (!serviceSelect.value || serviceSelect.value === 'General Inquiry')) {
         for (let i = 0; i < serviceSelect.options.length; i++) {
             if (serviceSelect.options[i].value.toLowerCase().includes('custom') || serviceSelect.options[i].textContent.toLowerCase().includes('custom')) {
                 serviceSelect.selectedIndex = i;
