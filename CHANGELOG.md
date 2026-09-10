@@ -199,3 +199,17 @@ Initial tracking of project changes.
 - **Verification**:
   - Verified with dedicated 10-suite Playwright test `scripts/test-phase1-catalog-alignment.js` (10/10 passed).
   - Regression verified with `scripts/verify-fixes.js`, `tests/sender-address-configuration.test.js`, `scripts/verify-process-why-apex.js`, and `scripts/test-artwork-flow.js`.
+
+---
+
+## Phase 1 — Location & Contact Information Update — 2026-09-10
+- **Location & Address Update (`contact.html`, `index.html`, `services.html`, `backend/.env`)**:
+  - Updated headquarters address and all footer contact locations from placeholder New York address to `Lakshmi Chowk, Lahore, Pakistan`.
+  - Updated backend environment metadata `BUSINESS_ADDRESS` to `Lakshmi Chowk, Lahore, Pakistan`.
+- **Phone & WhatsApp Integration (`contact.html`, `index.html`, `services.html`, `backend/.env`)**:
+  - Updated primary phone number and `tel:` links across all footers and contact page to `+92 322 4448885` (`tel:+923224448885`).
+  - Integrated direct click-to-chat WhatsApp link on `contact.html` (`https://wa.me/923224448885`).
+  - Adjusted operating hours timezone on `contact.html` to `Mon-Fri, 9am - 6pm PKT`.
+  - Updated backend environment metadata `BUSINESS_PHONE` to `+92 322 4448885`.
+- **Verification**:
+  - Verified via automated test suite confirming 0 remnants of old phone/address, active `tel:` and WhatsApp links, and preserved form behavior.

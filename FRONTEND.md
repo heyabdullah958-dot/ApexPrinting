@@ -127,3 +127,14 @@ Components like Navbar, Hero, and Forms are implemented natively in the DOM.
   - Enabled automatic modal deep-linking via URL query params (`?product=` / `?open=`).
 - Files modified: `index.html`, `script.js`, `contact.html`.
 - Verification: Playwright test suite `scripts/test-phase1-catalog-alignment.js` (10/10 suites passing, 100% success).
+
+---
+
+## Phase 1 — Location & Contact Information Update — 2026-09-10
+- **Headquarters & Footer Address**:
+  - Replaced placeholder address with `Lakshmi Chowk, Lahore, Pakistan` across `contact.html`, `index.html`, and `services.html`.
+- **Phone & Direct WhatsApp Action**:
+  - Updated all phone links to `+92 322 4448885` (`tel:+923224448885`).
+  - Added direct click-to-chat WhatsApp link (`https://wa.me/923224448885`) on `contact.html`.
+  - Adjusted operating hours to `Mon-Fri, 9am - 6pm PKT`.
+- Files modified: `contact.html`, `index.html`, `services.html`.
